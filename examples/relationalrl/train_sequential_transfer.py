@@ -89,6 +89,8 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
+    filename = ""
+
     action_dim = 4
     object_dim = 15
     shared_dim = 10
@@ -100,9 +102,7 @@ if __name__ == "__main__":
     mode = modes[int(input(f"Mode: {modes}"))]
     print(F"Mode selected {mode}. \n")
 
-    dock_images = ["negativereward_gpfg_multitask_pnp", "negativereward_gpfg_uniformxy", "negativereward_gpfg_multitower",
-                   "negativereward_gpfg_pyramid_lineinit", "pyramid_uniformlt6_linesgt6_init", "negativereward_gpfg_singletowerANDtogethertower", "singletower_multitower", "pyramid", "single_together"]
-    docker_img = dock_images[int(input(f"Docker images: {list(enumerate(dock_images))}"))]
+    docker_img = "negativereward_gpfg_uniformxy"
     print(F"\n Docker image selected: {docker_img}")
     num_blocks = int(input("Num blocks: "))
     print(f'\n{num_blocks} selected. \n')
@@ -114,8 +114,6 @@ if __name__ == "__main__":
     prob_action = .1
     stackonly = bool(int(input("Stack only: \n")))
     print(f'{stackonly} selected.\n')
-
-    filename = ""
 
     print(F"File name: {filename}\n")
 

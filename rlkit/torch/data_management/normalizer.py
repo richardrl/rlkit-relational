@@ -104,48 +104,6 @@ class CompositeNormalizer:
         :return:
         """
         if flat_obs is not None:
-            # If reshape blocks
-            # First, reshape
-            # Then, flatten along batch
-            # Normalize
-            # Then bring back to original shape
-            # if self.reshape_blocks:
-            #     before_obs = flat_obs.clone()
-            #     before_size = flat_obs.size()
-            #     batched_robot_state, batched_objects_and_goals = fetch_preprocessing(flat_obs)
-            #
-            #     N, nB, nR = batched_robot_state.size()
-            #     nOG = batched_objects_and_goals.size(-1)
-            #
-            #     # -> (N * nB, nR + nOG)
-            #     single_objects = torch.cat((batched_robot_state, batched_objects_and_goals), dim=-1).view(N * nB, nR + nOG)
-            #     normalized_batched = self.obs_normalizer.normalize(single_objects)
-            #     flat_obs = invert_fetch_preprocessing(*torch.split(normalized_batched, [nR, nOG], dim=-1),
-            #                                           nB=nB,
-            #                                           N=N,
-            #                                           nOG=nOG,
-            #                                           nR=nR
-            #                                           )
-            #     assert flat_obs.size() == before_size, (flat_obs.size(), before_size)
-            #
-            #     """
-            #     Test loop. If we don't normalize, batch_to_flat should invert the preprocessing
-            #     """
-            #     batched_rs, batched_og = torch.split(single_objects, [nR, nOG], dim=-1)
-            #     assert torch.all(torch.eq(batched_rs, batched_robot_state)), (batched_rs, batched_robot_state)
-            #     assert torch.all(torch.eq(batched_og, batched_objects_and_goals)), (batched_og, batched_objects_and_goals)
-            #     test_obs = invert_fetch_preprocessing(batched_rs, batched_og,
-            #                                           nB=nB,
-            #                                           N=N,
-            #                                           nOG=nOG,
-            #                                           nR=nR
-            #                                           )
-            #     assert torch.all(torch.eq(before_obs[:,nR], test_obs[:,nR]))
-            #     before_obj_goal = before_obs[:,nR:]
-            #     test_obj_goal = test_obs[:,nR:]
-            #     assert torch.all(torch.eq(before_obj_goal, test_obj_goal)), before_obj_goal-test_obj_goal
-            #     assert torch.all(torch.eq(before_obs, test_obs)), before_obs - test_obs
-            # else:
             flat_obs = self.obs_normalizer.normalize(flat_obs)
         if actions is not None:
             actions = self.action_normalizer.normalize(actions)

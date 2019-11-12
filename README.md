@@ -25,6 +25,9 @@ virtualenv -p python3 relationalrl_venv
 ```
 source relationalrl_venv/bin/activate
 ```
+
+For the following steps, make sure you are sourced inside the `relationalrl_venv` virtualenv.
+
 2. Install numpy.
 ```
 pip install numpy

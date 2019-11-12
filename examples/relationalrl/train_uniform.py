@@ -170,8 +170,7 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    # docker_img = "negativereward_gpfg_uniformxy"
-    docker_img = "pyramid"
+    docker_img = "negativereward_gpfg_uniformxy"
 
     if "rotctrl" in docker_img:
         action_dim = 8
