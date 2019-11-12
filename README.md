@@ -1,7 +1,7 @@
 # rlkit-relational
 Framework for relational reinforcement learning implemented in PyTorch. 
 
-We include additional features, beyond RLKit, aimed at supporting higher sample complexity tasks and relational RL:
+We include additional features, beyond RLKit, aimed at supporting high step complexity tasks and relational RL:
 - Training with multiple parallel workers via MPI
 - Concise implementations of inductive graph neural net architectures
 - Padded and masked minibatching for simultaneous training over variable-sized observation graphs
@@ -33,16 +33,28 @@ source relationalrl_venv/bin/activate
 
 ```
 
-To use a GPU with the image, you need to have [nvidia-docker installed](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)).
+3. Install Fetch Block Construction environment by cloning the repo: 
+```
+
+```
+
+and running inside the repo root
+```
+pip install -e .
+```
+
+Make sure Mujoco 1.5 is installed at ~/.mujoco
 
 ## Running scripts
-```
-mpirun -np <numworkers> python examples/relationalrl/train_pickandplace1.py
-```
-Make sure to set mode:
+Make sure to set `mode` in the scripts:
 - `here_no_doodad`: run locally, without Docker
 - `local_docker`: locally with Docker
 - `ec2`: Amazon EC2
+
+To run multiple workers under the `here_no_doodad` setting, run the following command in the command line:
+```
+mpirun -np <numworkers> python examples/relationalrl/train_pickandplace1.py
+```
 
 ## Using a GPU
 You can use a GPU by calling
