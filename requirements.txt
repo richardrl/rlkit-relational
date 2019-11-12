@@ -28,7 +28,6 @@ glfw==1.7.0
 graphviz==0.12
 gtimer==1.0.0b5
 gym==0.10.9
--e git+git@github.com:richardrl/gym_fetch_stack_multiworld.git@c0f0b8afdab0d0f7cc71e6e86a6388a951b2cb4d#egg=gym_fetch_stack
 h5py==2.9.0
 idna==2.8
 imageio==2.4.1
@@ -47,7 +46,6 @@ matplotlib==3.0.2
 more-itertools==5.0.0
 mpi4py==3.0.1
 mujoco-py==1.50.1.68
--e git+git@github.com:vitchyr/multiworld.git@b073e69c6991e877723ee55f85a3dfc57bed8674#egg=multiworld
 numpy==1.16.0
 numpy-stl==2.10.0
 opencv-python==4.0.0.21
