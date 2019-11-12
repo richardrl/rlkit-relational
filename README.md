@@ -26,7 +26,7 @@ Activate the virtualenv.
 ```
 source relationalrl_venv/bin/activate
 ```
-2.
+2. Install numpy.
 ```
 pip install numpy
 ```
@@ -39,8 +39,7 @@ pip install numpy
     6. Set LD_LIBRARY_PATH:
     
     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mjpro150/bin`
-    
-    `source ~/.bashrc`
+
     7. For Ubuntu, run:
     
     `sudo apt install libosmesa6-dev libgl1-mesa-glx libglfw3`
@@ -76,7 +75,7 @@ cp rlkit/launchers/config_template.py rlkit/launchers/config.py
 
     `export PYTHON_PATH=$PYTHON_PATH:<path/to/rlkit-relational>`
     
-    `source ~/.bashrc`
+8. Add the export statements above to `.bashrc` to avoid needing to run them everytime you login. 
 
 
 ## Running scripts
