@@ -17,6 +17,9 @@ Implemented algorithms:
 To get started, checkout the example scripts, linked above.
 
 ## Installation
+
+Note: These settings have only been tested on Ubuntu 18. It is recommended to use Ubuntu 18. 
+
 1. Install and activate a new python3 virtualenv.
 ```
 virtualenv -p python3 relationalrl_venv
