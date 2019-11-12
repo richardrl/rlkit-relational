@@ -17,12 +17,11 @@ Implemented algorithms:
 To get started, checkout the example scripts, linked above.
 
 ## Installation
-1. Install a virtualenv with the required packages.
+1. Install and activate a new python3 virtualenv.
 ```
 virtualenv -p python3 relationalrl_venv
 ```
 
-Activate the virtualenv.
 ```
 source relationalrl_venv/bin/activate
 ```
