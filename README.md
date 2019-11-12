@@ -24,13 +24,11 @@ cp rlkit/launchers/config_template.py rlkit/launchers/config.py
 2. Install a virtualenv with the required packages.
 ```
 virtualenv -p python3 relationalrl_venv
-
 ```
 
 Activate the virtualenv.
 ```
 source relationalrl_venv/bin/activate
-
 ```
 
 3. Install supporting packages
@@ -42,16 +40,17 @@ Make sure pip is with python3!!
 
 4. Install Fetch Block Construction environment by cloning the repo: 
 ```
-https://github.com/richardrl/fetch-block-construction
+git clone https://github.com/richardrl/fetch-block-construction
 ```
 
-and running inside the repo root
+```
+cd fetch-block-construction
+```
+
 ```
 pip install -e .
 ```
-
 Make sure Mujoco 1.5 is installed at ~/.mujoco
-
 ## Running scripts
 Make sure to set `mode` in the scripts:
 - `here_no_doodad`: run locally, without Docker
