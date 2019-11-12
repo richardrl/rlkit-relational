@@ -35,7 +35,7 @@ source relationalrl_venv/bin/activate
 
 3. Install Fetch Block Construction environment by cloning the repo: 
 ```
-
+https://github.com/richardrl/fetch-block-construction
 ```
 
 and running inside the repo root
