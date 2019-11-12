@@ -17,11 +17,7 @@ Implemented algorithms:
 To get started, checkout the example scripts, linked above.
 
 ## Installation
-1. Copy `config_template.py` to `config.py` and fill out with desired config settings:
-```
-cp rlkit/launchers/config_template.py rlkit/launchers/config.py
-```
-2. Install a virtualenv with the required packages.
+1. Install a virtualenv with the required packages.
 ```
 virtualenv -p python3 relationalrl_venv
 ```
@@ -30,15 +26,35 @@ Activate the virtualenv.
 ```
 source relationalrl_venv/bin/activate
 ```
+2.
+```
+pip install numpy
+```
+3. Prepare for [mujoco-py](https://github.com/openai/mujoco-py) installation.
+    1. Download [mjpro150](https://www.roboti.us/index.html)
+    2. `cd ~`
+    3. `mkdir .mujoco`
+    4. Move mjpro150 folder to `.mujoco`
+    5. Move mujoco license key `mjkey.txt` to `~/.mujoco/mjkey.txt`
+    6. Set LD_LIBRARY_PATH:
+    
+    `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.mujoco/mjpro150/bin`
+    
+    `source ~/.bashrc`
+    7. For Ubuntu, run:
+    
+    `sudo apt install libosmesa6-dev libgl1-mesa-glx libglfw3`
+    
+    `sudo apt install -y patchelf`
 
-3. Install supporting packages
+4. Install supporting packages
 ```
 pip install -r requirements.txt
 ```
 
 Make sure pip is with python3!!
 
-4. Install Fetch Block Construction environment by cloning the repo: 
+5. Install Fetch Block Construction environment: 
 ```
 git clone https://github.com/richardrl/fetch-block-construction
 ```
@@ -50,7 +66,19 @@ cd fetch-block-construction
 ```
 pip install -e .
 ```
-Make sure Mujoco 1.5 is installed at ~/.mujoco
+
+6. Copy `config_template.py` to `config.py` and fill out `config.py` with desired config settings:
+```
+cp rlkit/launchers/config_template.py rlkit/launchers/config.py
+```
+
+7. Set PYTHONPATH:
+
+    `export PYTHON_PATH=$PYTHON_PATH:<path/to/rlkit-relational>`
+    
+    `source ~/.bashrc`
+
+
 ## Running scripts
 Make sure to set `mode` in the scripts:
 - `here_no_doodad`: run locally, without Docker
@@ -63,17 +91,8 @@ mpirun -np <numworkers> python examples/relationalrl/train_pickandplace1.py
 ```
 
 ## Using a GPU
-You can use a GPU by calling
-```
-import rlkit.torch.pytorch_util as ptu
-ptu.set_gpu_mode(True)
-```
-before launching the scripts.
-
-If you are using `doodad` (see below), simply use the `use_gpu` flag:
-```
-run_experiment(..., use_gpu=True)
-```
+You can use a GPU by setting
+`mode="gpu_opt"` in the example scripts.
 
 ## Visualizing a policy and seeing results
 During training, the results will be saved to a file called under
@@ -89,21 +108,7 @@ LOCAL_LOG_DIR/<exp_prefix>/<foldername>
 (rlkit) $ python scripts/sim_policy.py LOCAL_LOG_DIR/<exp_prefix>/<foldername>/params.pkl
 ```
 
-If you have rllab installed, you can also visualize the results
-using `rllab`'s viskit, described at
-the bottom of [this page](http://rllab.readthedocs.io/en/latest/user/cluster.html)
-
-tl;dr run
-
-```bash
-python rllab/viskit/frontend.py LOCAL_LOG_DIR/<exp_prefix>/
-```
-to visualize all experiments with a prefix of `exp_prefix`. To only visualize a single run, you can do
-```bash
-python rllab/viskit/frontend.py LOCAL_LOG_DIR/<exp_prefix>/<folder name>
-```
-
-Alternatively, if you don't want to clone all of `rllab`, a repository containing only viskit can be found [here](https://github.com/vitchyr/viskit). You can similarly visualize results with.
+To visualize results, download [viskit](https://github.com/vitchyr/viskit). You can visualize results with:
 ```bash
 python viskit/viskit/frontend.py LOCAL_LOG_DIR/<exp_prefix>/
 ```
@@ -135,8 +140,6 @@ this README.
 To learn more, more about `doodad`, [go to the repository](https://github.com/justinjfu/doodad/).
 
 ## Credits
-Much of the infrastructure and base algorithm implementations are courtesy of [RLKit](https://github.com/vitchyr/rlkit).
+Much of the coding infrastructure and base algorithm implementations are courtesy of [RLKit](https://github.com/vitchyr/rlkit).
 
 The Dockerfile is based on the [OpenAI mujoco-py Dockerfile](https://github.com/openai/mujoco-py/blob/master/Dockerfile).
-
-## TODOs
