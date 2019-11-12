@@ -20,6 +20,6 @@ Your results should appear in `data` folder under `rlkit-relational` project roo
     
     3. Run with 35 workers.
     
-`mpirun -np 35 python examples/relationarl/train_sequential_transfer.py`
+    `mpirun -np 35 python examples/relationarl/train_sequential_transfer.py`
 
 3. Transfer to Single Tower task (`stackonly=True`) for 2+ blocks by repeating Step 2 with the most recently trained .PKL and changing `num_blocks` to be the desired number of blocks when prompted.
