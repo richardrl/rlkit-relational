@@ -90,5 +90,5 @@ torchvision==0.2.1
 -e git+git@github.com:szagoruyko/pytorchviz.git@46add7f2c071b6d29fc3d56e9d2d21e1c0a3af1d#egg=torchviz
 tornado==6.0.2
 traitlets==4.3.2
-urllib3==1.24.1
+urllib3==1.24.2
 wcwidth==0.1.7
