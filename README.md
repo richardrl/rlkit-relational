@@ -23,7 +23,7 @@ cp rlkit/launchers/config_template.py rlkit/launchers/config.py
 ```
 2. Install a virtualenv with the required packages.
 ```
-virtualenv -p python3 requirements.txt relationalrl_venv
+virtualenv -p python3 relationalrl_venv
 
 ```
 
@@ -33,7 +33,14 @@ source relationalrl_venv/bin/activate
 
 ```
 
-3. Install Fetch Block Construction environment by cloning the repo: 
+3. Install supporting packages
+```
+pip install -r requirements.txt
+```
+
+Make sure pip is with python3!!
+
+4. Install Fetch Block Construction environment by cloning the repo: 
 ```
 https://github.com/richardrl/fetch-block-construction
 ```
