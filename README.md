@@ -78,7 +78,7 @@ cp rlkit/launchers/config_template.py rlkit/launchers/config.py
 
 7. Set PYTHONPATH:
 
-    `export PYTHON_PATH=$PYTHON_PATH:<path/to/rlkit-relational>`
+    `export PYTHONPATH=$PYTHONPATH:<path/to/rlkit-relational>`
     
 8. Add the export statements above to `.bashrc` to avoid needing to run them everytime you login. 
 
