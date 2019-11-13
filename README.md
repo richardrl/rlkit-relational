@@ -82,6 +82,9 @@ cp rlkit/launchers/config_template.py rlkit/launchers/config.py
     
 8. Add the export statements above to `.bashrc` to avoid needing to run them everytime you login. 
 
+9. Optional: to save videos with the policy visualization script, install ffmpeg:
+
+    `sudo apt-get install ffmpeg`
 
 ## Running scripts
 Make sure to set `mode` in the scripts:

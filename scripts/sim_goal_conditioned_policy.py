@@ -5,6 +5,7 @@ from rlkit.core import logger
 from rlkit.samplers.rollout_functions import multitask_rollout
 from rlkit.torch import pytorch_util as ptu
 import numpy as np
+from gym.wrappers.monitor import Monitor
 
 def simulate_policy(args):
     if args.pause:
@@ -12,6 +13,7 @@ def simulate_policy(args):
     data = pickle.load(open(args.file, "rb"))
     policy = data['algorithm'].policy
     env = data['env']
+    env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
 
     num_blocks = 1
     print("Policy and environment loaded")
