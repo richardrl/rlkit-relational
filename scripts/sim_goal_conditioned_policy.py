@@ -4,8 +4,7 @@ import pickle
 from rlkit.core import logger
 from rlkit.samplers.rollout_functions import multitask_rollout
 from rlkit.torch import pytorch_util as ptu
-from rlkit.envs.vae_wrapper import VAEWrappedEnv
-
+import numpy as np
 
 def simulate_policy(args):
     if args.pause:
@@ -13,12 +12,12 @@ def simulate_policy(args):
     data = pickle.load(open(args.file, "rb"))
     policy = data['algorithm'].policy
     env = data['env']
+
+    num_blocks = 1
     print("Policy and environment loaded")
     if args.gpu:
         ptu.set_gpu_mode(True)
         policy.to(ptu.device)
-    if isinstance(env, VAEWrappedEnv):
-        env.mode(args.mode)
     if args.enable_render or hasattr(env, 'enable_render'):
         # some environments need to be reconfigured for visualization
         env.enable_render()
@@ -32,6 +31,10 @@ def simulate_policy(args):
             animated=not args.hide,
             observation_key='observation',
             desired_goal_key='desired_goal',
+            get_action_kwargs=dict(
+                mask=np.ones((1, num_blocks)),
+                deterministic=True
+            ),
         ))
         if hasattr(env, "log_diagnostics"):
             env.log_diagnostics(paths)
@@ -46,7 +49,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str,
                         help='path to the snapshot file')
-    parser.add_argument('--H', type=int, default=300,
+    parser.add_argument('--H', type=int, default=np.inf,
                         help='Max length of rollout')
     parser.add_argument('--speedup', type=float, default=10,
                         help='Speedup')
