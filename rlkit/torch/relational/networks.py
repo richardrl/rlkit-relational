@@ -5,6 +5,7 @@ from rlkit.torch.core import PyTorchModule
 from rlkit.torch.relational.modules import AttentiveGraphToGraph, FetchInputPreprocessing, AttentiveGraphPooling
 from rlkit.torch.sac.policies import FlattenTanhGaussianPolicy
 import numpy as np
+import gtimer as gt
 
 
 class ReNN(PyTorchModule):
@@ -35,11 +36,15 @@ class ReNN(PyTorchModule):
                 mask=None,
                 **proj_kwargs):
         vertices = self.input_module(obs, actions=actions, mask=mask)
+        gt.stamp("Forward_input_module")
         for i in range(len(self.graph_modules)):
             vertices = self.graph_modules[i](vertices, mask) + vertices # Residual connection
             vertices = self.activation_fnx(vertices)
+        gt.stamp("Forward_graph_modules")
 
         pooled_embedding = self.readout_module(vertices, mask)
+
+        gt.stamp("Forward_readout_module")
         return self.proj(pooled_embedding, **proj_kwargs)
 
 

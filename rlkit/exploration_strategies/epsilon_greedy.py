@@ -12,7 +12,7 @@ class EpsilonGreedy(RawExplorationStrategy, Serializable):
     """
     def __init__(self, action_space, prob_random_action=0.1):
         Serializable.quick_init(self, locals())
-        assert isinstance(action_space, Discrete)
+        # assert isinstance(action_space, Discrete)
         Serializable.quick_init(self, locals())
         self.prob_random_action = prob_random_action
         self.action_space = action_space

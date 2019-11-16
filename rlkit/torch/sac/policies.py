@@ -10,6 +10,7 @@ from rlkit.torch.data_management.normalizer import CompositeNormalizer
 from rlkit.torch.data_management.normalizer import TorchNormalizer
 import rlkit.torch.pytorch_util as ptu
 from rlkit.torch.relational.relational_util import fetch_preprocessing, invert_fetch_preprocessing
+import gtimer as gt
 
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
@@ -83,6 +84,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         :param deterministic: If True, do not sample
         :param return_log_prob: If True, return a sample and its log probability
         """
+        gt.stamp("Tanhnormal_forward")
         h = obs
         for i, fc in enumerate(self.fcs):
             h = self.hidden_activation(fc(h))
@@ -105,6 +107,8 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
             action = torch.tanh(mean)
         else:
             tanh_normal = TanhNormal(mean, std)
+
+            gt.stamp("tanhnormal_pre")
             if return_log_prob:
                 if reparameterize is True:
                     action, pre_tanh_value = tanh_normal.rsample(
@@ -124,6 +128,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
                     action = tanh_normal.rsample()
                 else:
                     action = tanh_normal.sample()
+            gt.stamp("tanhnormal_post")
 
         log_std = log_std.sum(dim=1, keepdim=True)
 

@@ -7,6 +7,7 @@ from rlkit.torch.networks import Mlp
 import torch
 from rlkit.torch.relational.relational_util import fetch_preprocessing
 import rlkit.torch.pytorch_util as ptu
+import gtimer as gt
 
 
 class FetchInputPreprocessing(PyTorchModule):
@@ -66,20 +67,23 @@ class Attention(PyTorchModule):
         :return:
         """
         N, nQ, nE = query.size()
-        assert len(query.size()) == 3
+        # assert len(query.size()) == 3
 
-        assert self.fc_createheads.out_features % nE == 0
+        # assert self.fc_createheads.out_features % nE == 0
         nH = int(self.fc_createheads.out_features / nE)
 
         nV = memory.size(1)
 
-        assert len(mask.size()) == 2
+        # assert len(mask.size()) == 2
 
         # N, nQ, nE -> N, nQ, nH, nE
-        query = self.fc_createheads(query).view(N, nQ, nH, nE)
+        if nH > 1:
+            query = self.fc_createheads(query).view(N, nQ, nH, nE)
+        else:
+            query = query.view(N, nQ, nH, nE)
 
-        if self.layer_norms is not None:
-            query = self.layer_norms[0](query)
+        # if self.layer_norms is not None:
+        #     query = self.layer_norms[0](query)
         # N, nQ, nH, nE -> N, nQ, nV, nH, nE
         query = query.unsqueeze(2).expand(-1, -1, nV, -1, -1)
 
@@ -89,14 +93,14 @@ class Attention(PyTorchModule):
         # -> N, nQ, nV, nH, 1
         qc_logits = self.fc_logit(torch.tanh(query + context))
 
-        if self.layer_norms is not None:
-            qc_logits = self.layer_norms[1](qc_logits)
+        # if self.layer_norms is not None:
+        #     qc_logits = self.layer_norms[1](qc_logits)
 
         # N, nV -> N, nQ, nV, nH, 1
         logit_mask = mask.unsqueeze(1).unsqueeze(3).unsqueeze(-1).expand_as(qc_logits)
 
         # qc_logits N, nQ, nV, nH, 1 -> N, nQ, nV, nH, 1
-        attention_probs = F.softmax(qc_logits * logit_mask + (-999999) * (1 - logit_mask), dim=2)
+        attention_probs = F.softmax(qc_logits * logit_mask + (-99999) * (1 - logit_mask), dim=2)
 
         # N, nV, nE -> N, nQ, nV, nH, nE
         memory = memory.unsqueeze(1).unsqueeze(3).expand(-1, nQ, -1, nH, -1)
@@ -110,7 +114,10 @@ class Attention(PyTorchModule):
         attention_heads = (memory * attention_probs * memory_mask).sum(2).squeeze(2)
 
         # N, nQ, nH, nE -> N, nQ, nE
-        attention_result = self.fc_reduceheads(attention_heads.view(N, nQ, nH*nE))
+        if nQ > 1:
+            attention_result = self.fc_reduceheads(attention_heads.view(N, nQ, nH*nE))
+        else:
+            attention_result = attention_heads.view(N, nQ, nE)
 
         # attention_result = self.activation_fnx(attention_result)
         #TODO: add nonlinearity here...
@@ -118,7 +125,7 @@ class Attention(PyTorchModule):
         if self.layer_norms is not None:
             attention_result = self.layer_norms[2](attention_result)
 
-        assert len(attention_result.size()) == 3
+        # assert len(attention_result.size()) == 3
         return attention_result
 
 
@@ -149,10 +156,10 @@ class AttentiveGraphToGraph(PyTorchModule):
 
         # -> (N, nQ, nE), (N, nV, nE), (N, nV, nE)
 
-        if self.layer_norm is not None:
-            qcm_block = self.layer_norm(self.fc_qcm(vertices))
-        else:
-            qcm_block = self.fc_qcm(vertices)
+        # if self.layer_norm is not None:
+        #     qcm_block = self.layer_norm(self.fc_qcm(vertices))
+        # else:
+        qcm_block = self.fc_qcm(vertices)
 
         query, context, memory = qcm_block.chunk(3, dim=-1)
 
@@ -189,12 +196,16 @@ class AttentiveGraphPooling(PyTorchModule):
         N, nV, nE = vertices.size()
 
         # nE -> N, nQ, nE where nQ == self.num_heads
-        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, self.num_heads, -1).to(ptu.get_device())
+        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, self.num_heads, -1)
 
-        if self.layer_norm is not None:
-            cm_block = self.layer_norm(self.fc_cm(vertices))
-        else:
-            cm_block = self.fc_cm(vertices)
+        # if self.layer_norm is not None:
+        #     cm_block = self.layer_norm(self.fc_cm(vertices))
+        # else:
+        cm_block = self.fc_cm(vertices)
         context, memory = cm_block.chunk(2, dim=-1)
+
+        gt.stamp("Readout_preattention")
         attention_result = self.attention(query, context, memory, mask)
+
+        gt.stamp("Readout_postattention")
         return attention_result.squeeze(1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension

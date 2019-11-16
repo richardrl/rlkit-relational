@@ -46,7 +46,6 @@ def experiment(variant):
     exp_policy = PolicyWrappedWithExplorationStrategy(exploration_strategy=es,
                                                       policy=policy)
 
-
     algorithm = HerTwinSAC(
         her_kwargs=dict(
             observation_key='observation',
@@ -89,20 +88,19 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    filename = ""
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/itr_6000.pkl"
 
     action_dim = 4
     object_dim = 15
     shared_dim = 10
 
     embedding_dim = 64
-    layer_norm = True
 
     modes = ["ec2", "here_no_doodad", "local_docker"]
     mode = modes[int(input(f"Mode: {modes}"))]
     print(F"Mode selected {mode}. \n")
 
-    docker_img = "negativereward_gpfg_uniformxy"
+    docker_img = "latest"
     print(F"\n Docker image selected: {docker_img}")
     num_blocks = int(input("Num blocks: "))
     print(f'\n{num_blocks} selected. \n')
@@ -165,9 +163,9 @@ if __name__ == "__main__":
             num_heads=nqh
         ),
         render=False,
-        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly-v1",
-        doodad_docker_image=F"richardrl/rr:{docker_img}",
-        gpu_doodad_docker_image=F"richardrl/rr:{docker_img}",
+        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly_SingletowerCase-v1",
+        doodad_docker_image=F"richardrl/fbc:{docker_img}",
+        gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
         save_video_period=50,
         num_relational_blocks=num_relational_blocks,

@@ -25,9 +25,12 @@ def get_generic_path_information(paths, stat_prefix='', num_blocks=None):
 
     assert np.all([path['mask'][0] == path['mask'][x] for path in paths for x in range(len(path))])
 
-    num_blocks_stacked = [(path['mask'][0].sum() - np.clip(np.abs(path['rewards']), None, path['mask'][0].sum())).mean() for path in paths]
-    assert all(x >= 0 for x in num_blocks_stacked), num_blocks_stacked
-    statistics[F'{stat_prefix} Num Blocks Stacked'] = np.mean(num_blocks_stacked)
+    final_num_blocks_stacked = [path['mask'][0].sum() - np.clip(np.abs(path["rewards"][-1]), None, path['mask'][0].sum()) for path in paths]
+    statistics[F'{stat_prefix} Final Num Blocks Stacked'] = np.mean(final_num_blocks_stacked)
+
+    mean_num_blocks_stacked = [(path['mask'][0].sum() - np.clip(np.abs(path['rewards']), None, path['mask'][0].sum())).mean() for path in paths]
+    assert all(x >= 0 for x in mean_num_blocks_stacked), mean_num_blocks_stacked
+    statistics[F'{stat_prefix} Mean Num Blocks Stacked'] = np.mean(mean_num_blocks_stacked)
 
     if isinstance(paths[0], dict) and num_blocks:
         # Keys are block IDs, values are final goal distances.
