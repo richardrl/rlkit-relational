@@ -170,7 +170,7 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    docker_img = "negativereward_gpfg_uniformxy"
+    docker_img = "latest"
 
     if "rotctrl" in docker_img:
         action_dim = 8
@@ -236,9 +236,9 @@ if __name__ == "__main__":
             max_num_blocks=max_num_blocks
         ),
         render=False,
-        env_id_template="FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly-v1",
-        doodad_docker_image=F"richardrl/rr:{docker_img}",
-        gpu_doodad_docker_image=F"richardrl/rr:{docker_img}",
+        env_id_template="FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly-SingletowerCase-v1",
+        doodad_docker_image=F"richardrl/fbc:{docker_img}",
+        gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
         save_video_period=50,
         num_relational_blocks=num_graph_modules,

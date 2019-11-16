@@ -173,7 +173,7 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    docker_img = "negativereward_gpfg_uniformxy"
+    docker_img = "latest"
     # docker_img = "negativereward_gpfg_uniformxy_rotctrl"
 
     if "rotctrl" in docker_img:
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     module = __import__("rlkit.torch.relational.modules", fromlist=['modules'])
 
-    mode = "here_no_doodad"
+    mode = "ec2"
 
     instance_type = "c5.18xlarge"
     settings_dict = get_ec2_settings(mode, instance_type)
@@ -242,8 +242,8 @@ if __name__ == "__main__":
         ),
         render=False,
         env_id=F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly_SingletowerCase-v1", # TODO: make sure FalseStackonly so it goes in the air
-        doodad_docker_image=F"richardrl/rr:{docker_img}",
-        gpu_doodad_docker_image=F"richardrl/rr:{docker_img}",
+        doodad_docker_image=F"richardrl/fbc:{docker_img}",
+        gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
         save_video_period=50,
         num_relational_blocks=num_graph_modules,
@@ -260,12 +260,12 @@ if __name__ == "__main__":
         pooling_heads=1
     )
 
-    test_prefix = "test_" if mode == "here_no_doodad" else input("Prefix: ")
+    test_prefix = "test" if mode == "here_no_doodad" else "pickandplace1"
     print(f"\nprefix: {test_prefix}")
 
     run_experiment(
         experiment,
-        exp_prefix=F"{test_prefix}alpha_stack{num_blocks}_numrelblocks{num_graph_modules}_nqh{num_query_heads}_dockimg{docker_img}_{stackonly}stackonly",  # Make sure no spaces..
+        exp_prefix=F"{test_prefix}_stack{num_blocks}_numgraphmodules{num_graph_modules}_nqh{num_query_heads}_dockimg{docker_img}_{stackonly}stackonly",  # Make sure no spaces..
         region="us-west-2",
         mode=mode,
         variant=variant,

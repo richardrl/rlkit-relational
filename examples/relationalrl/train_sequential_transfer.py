@@ -180,7 +180,7 @@ if __name__ == "__main__":
         ),
     )
 
-    test_prefix = "test_" if mode == "here_no_doodad" else input("Test prefix: ")
+    test_prefix = "test_" if mode == "here_no_doodad" else "sequentialtransfer_"
     print(f"Test prefix: {test_prefix}\n")
 
     _ = input("Prev stack label: \n")
