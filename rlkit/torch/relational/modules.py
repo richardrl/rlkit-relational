@@ -46,13 +46,15 @@ class Attention(PyTorchModule):
                  embedding_dim,
                  num_heads=1,
                  layer_norm=True,
-                 activation_fnx=F.leaky_relu):
+                 activation_fnx=F.leaky_relu,
+                 softmax_temperature=1.0):
         self.save_init_params(locals())
         super().__init__()
         self.fc_createheads = nn.Linear(embedding_dim, num_heads * embedding_dim)
         self.fc_logit = nn.Linear(embedding_dim, 1)
         self.fc_reduceheads = nn.Linear(num_heads * embedding_dim, embedding_dim)
         self.layer_norms = nn.ModuleList([nn.LayerNorm(i) for i in [num_heads*embedding_dim, 1, embedding_dim]]) if layer_norm else None
+        self.softmax_temperature = Parameter(torch.tensor(softmax_temperature))
 
         self.activation_fnx = activation_fnx
 
@@ -100,7 +102,7 @@ class Attention(PyTorchModule):
         logit_mask = mask.unsqueeze(1).unsqueeze(3).unsqueeze(-1).expand_as(qc_logits)
 
         # qc_logits N, nQ, nV, nH, 1 -> N, nQ, nV, nH, 1
-        attention_probs = F.softmax(qc_logits * logit_mask + (-99999) * (1 - logit_mask), dim=2)
+        attention_probs = F.softmax(qc_logits / self.softmax_temperature * logit_mask + (-99999) * (1 - logit_mask), dim=2)
 
         # N, nV, nE -> N, nQ, nV, nH, nE
         memory = memory.unsqueeze(1).unsqueeze(3).expand(-1, nQ, -1, nH, -1)
