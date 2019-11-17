@@ -88,7 +88,7 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/itr_6000.pkl"
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/pickandplace1/11-15-pickandplace1_stack1_numgraphmodules3_nqh1_dockimglatest_Falsestackonly-1573873256225/itr_5700.pkl"
 
     action_dim = 4
     object_dim = 15
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         ),
     )
 
-    test_prefix = "test_" if mode == "here_no_doodad" else input("Test prefix: ")
+    test_prefix = "test_" if mode == "here_no_doodad" else "sequentialtransfer_"
     print(f"Test prefix: {test_prefix}\n")
 
     _ = input("Prev stack label: \n")

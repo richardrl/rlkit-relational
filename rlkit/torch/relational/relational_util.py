@@ -149,6 +149,7 @@ def invert_fetch_preprocessing(batched_shared,
 
 
 def get_masks(curr_num_blocks, max_num_blocks, path_len, keepdim=False):
+    assert curr_num_blocks <= max_num_blocks
     if path_len > 1:
         masks = np.ones((path_len, curr_num_blocks))  # Num_blocks is the MAX num_blocks
         masks = np.pad(masks, ((0, 0), (0, int(max_num_blocks - curr_num_blocks))), "constant",

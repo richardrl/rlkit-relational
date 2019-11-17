@@ -39,6 +39,8 @@ def _elem_or_tuple_to_variable(elem_or_tuple):
 
 def _filter_batch(np_batch):
     for k, v in np_batch.items():
+        assert isinstance(v, np.ndarray), "Dict values must be of type ndarray"
+
         if v.dtype == np.bool:
             yield k, v.astype(int)
         else:
