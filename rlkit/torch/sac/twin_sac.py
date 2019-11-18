@@ -341,30 +341,30 @@ class TwinSAC(TorchRLAlgorithm):
             self.policy_optimizer.step()
 
             # DEBUG LOOP below
-            # if self._n_train_steps_total % (self.num_updates_per_train_call * 10) == 0:
-            #     try:
-            #         from torchviz import make_dot, make_dot_from_trace
-            #         tmp = {f'policy_{k}': v for k, v in dict(self.policy.named_parameters()).items()}
-            #         tmp.update({f'qf1_{k}': v for k, v in dict(self.qf1.named_parameters()).items()})
-            #         tmp.update({f'qf2_{k}': v for k, v in dict(self.qf2.named_parameters()).items()})
-            #         tmp.update({f'vf_{k}': v for k, v in dict(self.vf.named_parameters()).items()})
-            #         tmp.update(dict(log_alpha=self.log_alpha))
-            #
-            #         dot = make_dot(policy_loss, params=tmp)
-            #         dot.format = "svg"
-            #         from pathlib import Path
-            #         path = Path("/home/richard/Pictures/dots/")
-            #         # path.mkdir(parents=True)
-            #         dot.render(f"{path.absolute()}/dot{self._n_train_steps_total}_numnodes{len(dot.body)}")
-            #         import re
-            #
-            #         # self.digraphs_for_debugging.append([_ for _ in dot.body])
-            #         if len(self.digraphs_for_debugging) > 1:
-            #             with open(f"{path.absolute()}/dot{self._n_train_steps_total}_numnodes{len(dot.body)}_diag.txt", mode='w') as f:
-            #                 diff = np.setdiff1d(self.digraphs_for_debugging[-1], self.digraphs_for_debugging[-2])
-            #                 f.write(diff)
-            #     except ModuleNotFoundError as e:
-            #         print(e)
+            if self._n_train_steps_total % (self.num_updates_per_train_call * 10) == 0:
+                try:
+                    from torchviz import make_dot, make_dot_from_trace
+                    tmp = {f'policy_{k}': v for k, v in dict(self.policy.named_parameters()).items()}
+                    tmp.update({f'qf1_{k}': v for k, v in dict(self.qf1.named_parameters()).items()})
+                    tmp.update({f'qf2_{k}': v for k, v in dict(self.qf2.named_parameters()).items()})
+                    tmp.update({f'vf_{k}': v for k, v in dict(self.vf.named_parameters()).items()})
+                    tmp.update(dict(log_alpha=self.log_alpha))
+
+                    dot = make_dot(policy_loss, params=tmp)
+                    dot.format = "svg"
+                    from pathlib import Path
+                    path = Path("/home/richard/Pictures/dots/")
+                    # path.mkdir(parents=True)
+                    dot.render(f"{path.absolute()}/dot{self._n_train_steps_total}_numnodes{len(dot.body)}")
+                    import re
+
+                    # self.digraphs_for_debugging.append([_ for _ in dot.body])
+                    if len(self.digraphs_for_debugging) > 1:
+                        with open(f"{path.absolute()}/dot{self._n_train_steps_total}_numnodes{len(dot.body)}_diag.txt", mode='w') as f:
+                            diff = np.setdiff1d(self.digraphs_for_debugging[-1], self.digraphs_for_debugging[-2])
+                            f.write(diff)
+                except ModuleNotFoundError as e:
+                    print(e)
 
 
             gt.stamp('policy_loop')

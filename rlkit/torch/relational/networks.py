@@ -36,10 +36,15 @@ class ReNN(PyTorchModule):
                 mask=None,
                 **proj_kwargs):
         vertices = self.input_module(obs, actions=actions, mask=mask)
+
+        assert len(vertices.size()) == 3
+
         gt.stamp("Forward_input_module")
         for i in range(len(self.graph_modules)):
-            vertices = self.graph_modules[i](vertices, mask) + vertices # Residual connection
+            graph_output = self.graph_modules[i](vertices, mask)
+            vertices = self.activation_fnx(graph_output) + vertices # Residual connection
             vertices = self.activation_fnx(vertices)
+
         gt.stamp("Forward_graph_modules")
 
         pooled_embedding = self.readout_module(vertices, mask)

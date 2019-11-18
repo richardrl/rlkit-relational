@@ -79,10 +79,10 @@ class Attention(PyTorchModule):
         # assert len(mask.size()) == 2
 
         # N, nQ, nE -> N, nQ, nH, nE
-        if nH > 1:
-            query = self.fc_createheads(query).view(N, nQ, nH, nE)
-        else:
-            query = query.view(N, nQ, nH, nE)
+        # if nH > 1:
+        query = self.fc_createheads(query).view(N, nQ, nH, nE)
+        # else:
+        #     query = query.view(N, nQ, nH, nE)
 
         # if self.layer_norms is not None:
         #     query = self.layer_norms[0](query)
@@ -116,10 +116,10 @@ class Attention(PyTorchModule):
         attention_heads = (memory * attention_probs * memory_mask).sum(2).squeeze(2)
 
         # N, nQ, nH, nE -> N, nQ, nE
-        if nQ > 1:
-            attention_result = self.fc_reduceheads(attention_heads.view(N, nQ, nH*nE))
-        else:
-            attention_result = attention_heads.view(N, nQ, nE)
+        # if nQ > 1:
+        attention_result = self.fc_reduceheads(attention_heads.view(N, nQ, nH*nE))
+        # else:
+        #     attention_result = attention_heads.view(N, nQ, nE)
 
         # attention_result = self.activation_fnx(attention_result)
         #TODO: add nonlinearity here...
@@ -181,7 +181,7 @@ class AttentiveGraphPooling(PyTorchModule):
         self.save_init_params(locals())
         super().__init__()
         self.fc_cm = nn.Linear(embedding_dim, 2 * embedding_dim)
-        self.layer_norm= nn.LayerNorm(2*embedding_dim) if layer_norm else None
+        self.layer_norm = nn.LayerNorm(2*embedding_dim) if layer_norm else None
 
         self.input_independent_query = Parameter(torch.Tensor(embedding_dim))
         self.input_independent_query.data.uniform_(-init_w, init_w)
@@ -210,4 +210,4 @@ class AttentiveGraphPooling(PyTorchModule):
         attention_result = self.attention(query, context, memory, mask)
 
         gt.stamp("Readout_postattention")
-        return attention_result.squeeze(1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
+        return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension

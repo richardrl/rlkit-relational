@@ -49,11 +49,12 @@ def experiment(variant):
         ),
         readout_module_kwargs=dict(
             embedding_dim=64,
-            layer_norm=layer_norm
+            layer_norm=layer_norm,
+            num_heads=variant['pooling_heads']
         ),
         proj_kwargs=dict(
             hidden_sizes=mlp_hidden_sizes,
-            obs_dim=variant['pooling_heads'] * embedding_dim,
+            obs_dim=embedding_dim,
             action_dim=action_dim,
             output_activation=torch.tanh,
             layer_norm=layer_norm,
@@ -75,13 +76,14 @@ def experiment(variant):
         ),
         readout_module_kwargs=dict(
             embedding_dim=64,
-            layer_norm=layer_norm
+            layer_norm=layer_norm,
+            num_heads=variant['pooling_heads']
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
             hidden_sizes=mlp_hidden_sizes,
             output_size=1,
-            input_size=variant['pooling_heads']*embedding_dim,
+            input_size=embedding_dim,
             layer_norm=layer_norm
         ),
         num_graph_modules=num_graph_modules
@@ -101,13 +103,14 @@ def experiment(variant):
         ),
         readout_module_kwargs=dict(
             embedding_dim=64,
-            layer_norm=layer_norm
+            layer_norm=layer_norm,
+            num_heads=variant['pooling_heads']
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
             hidden_sizes=mlp_hidden_sizes,
             output_size=1,
-            input_size=variant['pooling_heads']*embedding_dim,
+            input_size=embedding_dim,
             layer_norm=layer_norm
         ),
         num_graph_modules=num_graph_modules
@@ -127,13 +130,14 @@ def experiment(variant):
         ),
         readout_module_kwargs=dict(
             embedding_dim=64,
-            layer_norm=layer_norm
+            layer_norm=layer_norm,
+            num_heads=variant['pooling_heads']
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
             hidden_sizes=mlp_hidden_sizes,
             output_size=1,
-            input_size=variant['pooling_heads']*embedding_dim,
+            input_size=embedding_dim,
             layer_norm=layer_norm
         ),
         num_graph_modules=num_graph_modules
@@ -203,7 +207,7 @@ if __name__ == "__main__":
 
     module = __import__("rlkit.torch.relational.modules", fromlist=['modules'])
 
-    mode = "ec2"
+    mode = "here_no_doodad"
 
     instance_type = "c5.18xlarge"
     settings_dict = get_ec2_settings(mode, instance_type)
@@ -253,11 +257,10 @@ if __name__ == "__main__":
         action_dim=action_dim,
         goal_dim=goal_dim,
         embedding_dim=embedding_dim,
-        selection_heads=2,
         her_kwargs=dict(
             exploration_masking=True
         ),
-        pooling_heads=1
+        pooling_heads=2
     )
 
     test_prefix = "test" if mode == "here_no_doodad" else "pickandplace1"
