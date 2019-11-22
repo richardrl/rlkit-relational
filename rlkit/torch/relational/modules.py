@@ -168,6 +168,55 @@ class AttentiveGraphToGraph(PyTorchModule):
         return self.attention(query, context, memory, mask)
 
 
+class ProjAttentiveGraphPooling(PyTorchModule):
+    """
+    Pools nV vertices to a single vertex embedding
+
+    """
+    def __init__(self,
+                 embedding_dim=64,
+                 num_heads=1,
+                 init_w=3e-3,
+                 layer_norm=True,
+                 proj_kwargs=None):
+        self.save_init_params(locals())
+        super().__init__()
+        self.fc_cm = nn.Linear(embedding_dim, 2 * embedding_dim)
+        self.layer_norm = nn.LayerNorm(2*embedding_dim) if layer_norm else None
+
+        self.input_independent_query = Parameter(torch.Tensor(embedding_dim))
+        self.input_independent_query.data.uniform_(-init_w, init_w)
+        self.num_heads = num_heads
+        self.attention = Attention(embedding_dim, num_heads=num_heads, layer_norm=layer_norm)
+        self.proj = Mlp(**proj_kwargs)
+
+    def forward(self, vertices, mask):
+        """
+        N, nV, nE -> N, nE
+        :param vertices:
+        :param mask:
+        :return:
+        """
+        N, nV, nE = vertices.size()
+
+        # nE -> N, nQ, nE where nQ == self.num_heads
+        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, self.num_heads, -1)
+
+        # if self.layer_norm is not None:
+        #     cm_block = self.layer_norm(self.fc_cm(vertices))
+        # else:
+        cm_block = self.fc_cm(vertices)
+        context, memory = cm_block.chunk(2, dim=-1)
+
+        gt.stamp("Readout_preattention")
+        attention_result = self.attention(query, context, memory, mask)
+
+        gt.stamp("Readout_postattention")
+        # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
+
+        return self.proj(attention_result).squeeze(1)
+
+
 class AttentiveGraphPooling(PyTorchModule):
     """
     Pools nV vertices to a single vertex embedding
@@ -203,8 +252,9 @@ class AttentiveGraphPooling(PyTorchModule):
         # if self.layer_norm is not None:
         #     cm_block = self.layer_norm(self.fc_cm(vertices))
         # else:
-        cm_block = self.fc_cm(vertices)
-        context, memory = cm_block.chunk(2, dim=-1)
+        # cm_block = self.fc_cm(vertices)
+        # context, memory = cm_block.chunk(2, dim=-1)
+        context, memory = vertices, vertices
 
         gt.stamp("Readout_preattention")
         attention_result = self.attention(query, context, memory, mask)

@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from rlkit.policies.base import ExplorationPolicy
 from rlkit.torch.core import PyTorchModule
-from rlkit.torch.relational.modules import AttentiveGraphToGraph, FetchInputPreprocessing, AttentiveGraphPooling
+from rlkit.torch.relational.modules import *
 from rlkit.torch.sac.policies import FlattenTanhGaussianPolicy
 import numpy as np
 import gtimer as gt
@@ -14,7 +14,7 @@ class ReNN(PyTorchModule):
                  input_module_kwargs=None,
                  graph_module_class=AttentiveGraphToGraph,
                  graph_module_kwargs=None,
-                 readout_module_class=AttentiveGraphPooling,
+                 readout_module_class=ProjAttentiveGraphPooling,
                  readout_module_kwargs=None,
                  proj_class=FlattenTanhGaussianPolicy,
                  proj_kwargs=None,
@@ -49,8 +49,12 @@ class ReNN(PyTorchModule):
 
         pooled_embedding = self.readout_module(vertices, mask)
 
-        gt.stamp("Forward_readout_module")
-        return self.proj(pooled_embedding, **proj_kwargs)
+        if isinstance(self.proj, FlattenTanhGaussianPolicy):
+            return self.proj(pooled_embedding)
+        else:
+            gt.stamp("Forward_readout_module")
+            return pooled_embedding
+        # return self.proj(pooled_embedding, **proj_kwargs)
 
 
 class ReNNPolicy(ReNN, ExplorationPolicy):

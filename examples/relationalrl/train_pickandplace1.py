@@ -50,8 +50,15 @@ def experiment(variant):
         readout_module_kwargs=dict(
             embedding_dim=64,
             layer_norm=layer_norm,
-            num_heads=variant['pooling_heads']
+            num_heads=variant['pooling_heads'],
+            # proj_kwargs=dict(
+            #     hidden_sizes=mlp_hidden_sizes,
+            #     output_size=1,
+            #     input_size=embedding_dim,
+            #     layer_norm=layer_norm
+            # ),
         ),
+        readout_module_class=AttentiveGraphPooling,
         proj_kwargs=dict(
             hidden_sizes=mlp_hidden_sizes,
             obs_dim=embedding_dim,
@@ -59,7 +66,8 @@ def experiment(variant):
             output_activation=torch.tanh,
             layer_norm=layer_norm,
         ),
-        num_graph_modules=num_graph_modules
+        num_graph_modules=num_graph_modules,
+        proj_class=FlattenTanhGaussianPolicy
     )
 
     qf1 = ReNN(
@@ -77,7 +85,13 @@ def experiment(variant):
         readout_module_kwargs=dict(
             embedding_dim=64,
             layer_norm=layer_norm,
-            num_heads=variant['pooling_heads']
+            num_heads=variant['pooling_heads'],
+            proj_kwargs=dict(
+                hidden_sizes=mlp_hidden_sizes,
+                output_size=1,
+                input_size=embedding_dim,
+                layer_norm=layer_norm
+            ),
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
@@ -104,7 +118,13 @@ def experiment(variant):
         readout_module_kwargs=dict(
             embedding_dim=64,
             layer_norm=layer_norm,
-            num_heads=variant['pooling_heads']
+            num_heads=variant['pooling_heads'],
+            proj_kwargs=dict(
+                hidden_sizes=mlp_hidden_sizes,
+                output_size=1,
+                input_size=embedding_dim,
+                layer_norm=layer_norm
+            ),
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
@@ -131,7 +151,13 @@ def experiment(variant):
         readout_module_kwargs=dict(
             embedding_dim=64,
             layer_norm=layer_norm,
-            num_heads=variant['pooling_heads']
+            num_heads=variant['pooling_heads'],
+            proj_kwargs=dict(
+                hidden_sizes=mlp_hidden_sizes,
+                output_size=1,
+                input_size=embedding_dim,
+                layer_norm=layer_norm
+            ),
         ),
         proj_class=Mlp,
         proj_kwargs=dict(
@@ -260,7 +286,7 @@ if __name__ == "__main__":
         her_kwargs=dict(
             exploration_masking=True
         ),
-        pooling_heads=2
+        pooling_heads=1
     )
 
     test_prefix = "test" if mode == "here_no_doodad" else "pickandplace1"
