@@ -1,0 +1,40 @@
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># ThreadID: 140296524760832</span>
+File: <span style="color: #BA2121">&quot;/usr/lib/python3.6/threading.py&quot;</span>, line <span style="color: #666666">884</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _bootstrap
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>_bootstrap_inner()
+File: <span style="color: #BA2121">&quot;/usr/lib/python3.6/threading.py&quot;</span>, line <span style="color: #666666">916</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _bootstrap_inner
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>run()
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/stacktracer.py&quot;</span>, line <span style="color: #666666">64</span>, <span style="color: #AA22FF; font-weight: bold">in</span> run
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>stacktraces()
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/stacktracer.py&quot;</span>, line <span style="color: #666666">78</span>, <span style="color: #AA22FF; font-weight: bold">in</span> stacktraces
+  fout<span style="color: #666666">.</span>write(stacktraces())
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/stacktracer.py&quot;</span>, line <span style="color: #666666">26</span>, <span style="color: #AA22FF; font-weight: bold">in</span> stacktraces
+  <span style="color: #008000; font-weight: bold">for</span> filename, lineno, name, line <span style="color: #AA22FF; font-weight: bold">in</span> traceback<span style="color: #666666">.</span>extract_stack(stack):
+
+<span style="color: #408080; font-style: italic"># ThreadID: 140296657909568</span>
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/examples/relationalrl/train_sequential_transfer.py&quot;</span>, line <span style="color: #666666">225</span>, <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #666666">&lt;</span>module<span style="color: #666666">&gt;</span>
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/launchers/launcher_util.py&quot;</span>, line <span style="color: #666666">590</span>, <span style="color: #AA22FF; font-weight: bold">in</span> run_experiment
+  <span style="color: #666666">**</span>run_experiment_kwargs
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/launchers/launcher_util.py&quot;</span>, line <span style="color: #666666">168</span>, <span style="color: #AA22FF; font-weight: bold">in</span> run_experiment_here
+  <span style="color: #008000; font-weight: bold">return</span> experiment_function(variant)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/examples/relationalrl/train_sequential_transfer.py&quot;</span>, line <span style="color: #666666">101</span>, <span style="color: #AA22FF; font-weight: bold">in</span> experiment
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/core/rl_algorithm.py&quot;</span>, line <span style="color: #666666">169</span>, <span style="color: #AA22FF; font-weight: bold">in</span> train
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>train_batch(start_epoch<span style="color: #666666">=</span>start_epoch)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/core/rl_algorithm.py&quot;</span>, line <span style="color: #666666">215</span>, <span style="color: #AA22FF; font-weight: bold">in</span> train_batch
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>_try_to_train()
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/core/rl_algorithm.py&quot;</span>, line <span style="color: #666666">282</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _try_to_train
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>_do_training()
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/sac/twin_sac.py&quot;</span>, line <span style="color: #666666">204</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _do_training
+  q1_pred <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>qf1(obs, actions<span style="color: #666666">=</span>actions, <span style="color: #666666">**</span>kwargs)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/nn/modules/module.py&quot;</span>, line <span style="color: #666666">493</span>, <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #0000FF">__call__</span>
+  result <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>forward(<span style="color: #666666">*</span><span style="color: #008000">input</span>, <span style="color: #666666">**</span>kwargs)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/relational/networks.py&quot;</span>, line <span style="color: #666666">148</span>, <span style="color: #AA22FF; font-weight: bold">in</span> forward
+  relational_block_embeddings <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>graph_propagation<span style="color: #666666">.</span>forward(vertices, mask<span style="color: #666666">=</span>mask)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/relational/networks.py&quot;</span>, line <span style="color: #666666">91</span>, <span style="color: #AA22FF; font-weight: bold">in</span> forward
+  output <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>layer_norms[i](output)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/nn/modules/module.py&quot;</span>, line <span style="color: #666666">493</span>, <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #0000FF">__call__</span>
+  result <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>forward(<span style="color: #666666">*</span><span style="color: #008000">input</span>, <span style="color: #666666">**</span>kwargs)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/nn/modules/normalization.py&quot;</span>, line <span style="color: #666666">157</span>, <span style="color: #AA22FF; font-weight: bold">in</span> forward
+  <span style="color: #008000">input</span>, <span style="color: #008000">self</span><span style="color: #666666">.</span>normalized_shape, <span style="color: #008000">self</span><span style="color: #666666">.</span>weight, <span style="color: #008000">self</span><span style="color: #666666">.</span>bias, <span style="color: #008000">self</span><span style="color: #666666">.</span>eps)
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/nn/functional.py&quot;</span>, line <span style="color: #666666">1725</span>, <span style="color: #AA22FF; font-weight: bold">in</span> layer_norm
+  torch<span style="color: #666666">.</span>backends<span style="color: #666666">.</span>cudnn<span style="color: #666666">.</span>enabled)
+</pre></div>

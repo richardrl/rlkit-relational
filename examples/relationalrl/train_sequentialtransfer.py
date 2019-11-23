@@ -1,19 +1,33 @@
-import gym
-import rlkit.torch.pytorch_util as ptu
+"""
+This should results in an average return of ~3000 by the end of training.
+
+Usually hits 3000 around epoch 80-100. Within a see, the performance will be
+a bit noisy from one epoch to the next (occasionally dips dow to ~2000).
+
+Note that one epoch = 5k steps, so 200 epochs = 1 million steps.
+"""
 from rlkit.data_management.obs_dict_replay_buffer import ObsDictRelabelingBuffer
 from rlkit.exploration_strategies.base import (
-    PolicyWrappedWithExplorationStrategy )
+    PolicyWrappedWithExplorationStrategy
+)
+from rlkit.torch.her.her import HerTwinSAC
 from rlkit.torch.optim.mpi_adam import MpiAdam
 from rlkit.launchers.launcher_util import run_experiment
+from rlkit.torch.relational.networks import *
 import pickle
 from mpi4py import MPI
-from rlkit.torch.her.her import HerTwinSAC
-import torch
-from rlkit.launchers.config import get_ec2_settings
+from rlkit.launchers.config import get_infra_settings
+from rlkit.exploration_strategies.epsilon_greedy import EpsilonGreedy
+import gym
 
 
 def experiment(variant):
-    import fetch_block_construction
+    import stacktracer
+    stacktracer.trace_start("trace.html")
+    try:
+        import fetch_block_construction
+    except ImportError as e:
+        print(e)
 
     env = gym.make(variant['env_id'])
     data = pickle.load(open(
@@ -26,9 +40,7 @@ def experiment(variant):
     qf2 = algorithm.qf2
     vf = algorithm.vf
     log_alpha = data['algorithm'].log_alpha
-    """
-    SelectionAttention added from block1 to 2
-    """
+
     observation_key = 'observation'
     desired_goal_key = 'desired_goal'
     achieved_goal_key = desired_goal_key.replace("desired", "achieved")
@@ -41,7 +53,6 @@ def experiment(variant):
         **variant['replay_buffer_kwargs']
     )
 
-    from rlkit.exploration_strategies.epsilon_greedy import EpsilonGreedy
     es = EpsilonGreedy(env.action_space, prob_random_action=prob_action)
     exp_policy = PolicyWrappedWithExplorationStrategy(exploration_strategy=es,
                                                       policy=policy)
@@ -67,8 +78,11 @@ def experiment(variant):
 
     algorithm.log_alpha = torch.tensor(ptu.get_numpy(log_alpha), dtype=torch.float32, requires_grad=True, device=ptu.device)
 
+    #TODO: we may need to reload the alpha
+
     algorithm.to(ptu.device) # Convert all preloaded weights to GPU here
     algorithm.optim_to(ptu.device)
+
     algorithm.alpha_optimizer.comm = MPI.COMM_WORLD
     algorithm.alpha_optimizer.reconnect_params([algorithm.log_alpha])
     assert algorithm.alpha_optimizer.param_groups[0]['params'][0] is algorithm.log_alpha
@@ -88,13 +102,9 @@ def experiment(variant):
 
 
 if __name__ == "__main__":
-    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/pickandplace1/11-15-pickandplace1_stack1_numgraphmodules3_nqh1_dockimglatest_Falsestackonly-1573873256225/itr_5700.pkl"
-
     action_dim = 4
     object_dim = 15
     shared_dim = 10
-
-    embedding_dim = 64
 
     modes = ["ec2", "here_no_doodad", "local_docker"]
     mode = modes[int(input(f"Mode: {modes}"))]
@@ -107,14 +117,20 @@ if __name__ == "__main__":
     num_epochs_per_eval = 10
 
     instance_type = "c5.18xlarge"
-    settings_dict = get_ec2_settings(mode, instance_type=instance_type)
+    ec2_settings = get_infra_settings(mode, instance_type)
+    num_gpus = ec2_settings['num_gpus']
+    num_parallel_processes = ec2_settings['num_parallel_processes']
+    gpu_mode = ec2_settings['gpu_mode']
 
     prob_action = .1
     stackonly = bool(int(input("Stack only: \n")))
     print(f'{stackonly} selected.\n')
 
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/pickandplace1/11-23-pickandplace1-stack1-numrelblocks3-nqh1-dockimglatest-Falsestackonly-recurrentTrue/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue-1574500092573/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue_2019_11_23_09_14_11_0000--s-17380/itr_4800.pkl"
+
     print(F"File name: {filename}\n")
 
+    # assert "relational_preloadstack1" in filename
     import re
     if "nqh" in filename:
         nqh = int(re.search("(?<=nqh)(\d+)(?=_)", filename).group(0))
@@ -122,8 +138,12 @@ if __name__ == "__main__":
         nqh = 1
     if "numrelblocks" in filename:
         num_relational_blocks = int(re.search("(?<=numrelblocks)(\d+)", filename).group(0))
+
     else:
-        num_relational_blocks = 2
+        num_relational_blocks = 3
+
+    print(F"\n num_rel_blocks{num_relational_blocks}")
+
     if "stackonly" in filename:
         so = re.search("(?<=stackonly)(True|False)(_|-)", filename)
         if so is None:
@@ -145,7 +165,7 @@ if __name__ == "__main__":
             num_steps_per_eval=50*num_blocks * 10 if num_blocks <= 6 else 300 + 15*(num_blocks - 6) * 10, # Do ten episodes per eval
             num_epochs_per_eval=num_epochs_per_eval, # One episode per epoch, so this is roughly 10 episodes per eval * number of parallel episodes...
             num_epochs_per_param_save=num_epochs_per_eval * 5,
-            num_gpus=settings_dict["num_gpus"],
+            num_gpus=num_gpus,
 
             #SAC args start
             soft_target_tau=0.001,
@@ -180,7 +200,7 @@ if __name__ == "__main__":
         ),
     )
 
-    test_prefix = "test_" if mode == "here_no_doodad" else "sequentialtransfer_softmaxtemp_"
+    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer"
     print(f"Test prefix: {test_prefix}\n")
 
     _ = input("Prev stack label: \n")
@@ -191,16 +211,16 @@ if __name__ == "__main__":
 
     run_experiment(
         experiment,
-        exp_prefix=F"{test_prefix}alpha-stack{new_stacklabel}"
-        F"_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{nqh}_dockimg{docker_img}_epsgreedyprobaction{prob_action}_stackonly{stackonly}",  # Make sure no spaces..
+        exp_prefix=F"{test_prefix}_stack{new_stacklabel}"
+        F"_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{nqh}_dockimg{docker_img}_probaction{prob_action}_stackonly{stackonly}",  # Make sure no spaces..
         region="us-west-2",
         mode=mode,
         variant=variant,
-        gpu_mode=settings_dict['gpu_mode'],
+        gpu_mode=gpu_mode,
         spot_price=5,
         snapshot_mode='gap_and_last',
         snapshot_gap=num_epochs_per_eval,
         num_exps_per_instance=1,
         instance_type=instance_type,
-        python_cmd=F"mpirun --allow-run-as-root -np {settings_dict['num_parallel_processes']} python"
+        python_cmd=F"mpirun --allow-run-as-root -np {num_parallel_processes} python"
     )

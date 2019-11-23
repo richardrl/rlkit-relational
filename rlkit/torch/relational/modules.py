@@ -1,22 +1,15 @@
 import math
 
 import torch.nn as nn
-# Post-attention modules
-# Average pool or sum
-# Aveage pool: take in N blocks, produce N embeddings, reduce to 1 block embedding, feed that into one MLP to get Q scalar.
-# Sum pool: take in N blocks, produce N embeddingss, feed into N MLPs, sum N MLPs to get Q scalar.
 from torch import nn as nn
 from torch.nn import Parameter, functional as F
 
-from rlkit.torch import pytorch_util as ptu
 from rlkit.torch.core import PyTorchModule
 from rlkit.torch.networks import Mlp
 import torch
-from inspect import signature
 
 from rlkit.torch.relational.relational_util import fetch_preprocessing
-from rlkit.policies.base import Policy, ExplorationPolicy
-import rlkit.torch.pytorch_util as ptu
+
 import gtimer as gt
 
 
@@ -67,11 +60,6 @@ class Attention(PyTorchModule):
         self.softmax_temperature = Parameter(torch.tensor(softmax_temperature))
 
         self.activation_fnx = activation_fnx
-
-        # self.fc0 = nn.Linear(embedding_dim, num_heads * embedding_dim)
-        # # Project integration into logits
-        # self.fc1 = nn.Linear(embedding_dim, 1)
-        # self.softmax_temperature = Parameter(torch.tensor(softmax_temperature))
 
     def forward(self, query, context, memory, mask):
         """

@@ -19,6 +19,7 @@ from rlkit.torch.relational.networks import *
 import torch.nn.functional as F
 from rlkit.torch.relational.modules import *
 from torch.nn import Parameter
+from rlkit.launchers.config import get_infra_settings
 
 
 def experiment(variant):
@@ -224,73 +225,12 @@ if __name__ == "__main__":
     mode = "ec2"
 
     instance_type = "c5.18xlarge"
-    if mode == "ec2":
-        if instance_type=="p2.xlarge":
-            num_gpus = 1
-            num_parallel_processes = 3
-            gpu_mode = "gpu_opt"
-        elif instance_type=="c4.2xlarge":
-            num_gpus = 0
-            num_parallel_processes = 7
-            gpu_mode = False
-        elif instance_type=="c4.4xlarge":
-            num_gpus = 0
-            num_parallel_processes = 15
-            gpu_mode = False
-        elif instance_type=="c5.4xlarge":
-            num_gpus = 0
-            num_parallel_processes = 15
-            gpu_mode = False
-        elif instance_type == "c5.9xlarge":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type == "c5.12xlarge":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type == "c5.18xlarge":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type == "c5.metal":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type == "c5d.18xlarge":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type=="c4.8xlarge":
-            num_gpus = 0
-            num_parallel_processes = 35
-            gpu_mode = False
-        elif instance_type=="p3.2xlarge":
-            num_gpus = 1
-            num_parallel_processes = 7
-            gpu_mode = "gpu_opt"
-        elif instance_type=="p2.16xlarge":
-            num_gpus = 1
-            num_parallel_processes = 5
-            gpu_mode = "gpu_opt"
-        elif instance_type=="g3.4xlarge":
-            num_parallel_processes = 14
-            num_gpus = 1
-            gpu_mode = "gpu_opt"
-        else:
-            raise NotImplementedError
-    elif mode == "local_docker":
-        instance_type = None
-        num_gpus = 0
-        gpu_mode = False
-        num_parallel_processes = 2
-    elif mode == "here_no_doodad":
-        instance_type = None
-        gpu_mode = False
-        num_gpus = 1
-        num_parallel_processes = 1
+    ec2_settings = get_infra_settings(mode, instance_type)
+    num_gpus = ec2_settings['num_gpus']
+    num_parallel_processes = ec2_settings['num_parallel_processes']
+    gpu_mode = ec2_settings['gpu_mode']
 
-    recurrent_graph=True
+    recurrent_graph=False
 
     variant = dict(
         algo_kwargs=dict(

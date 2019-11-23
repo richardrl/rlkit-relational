@@ -6,7 +6,7 @@ from rlkit.launchers.launcher_util import run_experiment
 from rlkit.torch.relational.networks import *
 from rlkit.torch.relational.modules import *
 from rlkit.envs.multi_env_wrapper import MultiEnvWrapperHerTwinSAC
-from rlkit.launchers.config import get_ec2_settings
+from rlkit.launchers.config import get_infra_settings
 
 
 def stackonly(i):
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     mode = "here_no_doodad"
 
     instance_type = "c5.18xlarge"
-    settings_dict = get_ec2_settings(mode, instance_type=instance_type)
+    settings_dict = get_infra_settings(mode, instance_type=instance_type)
 
     variant = dict(
         algo_kwargs=dict(
