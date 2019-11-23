@@ -1,3 +1,10 @@
+import math
+
+import torch.nn as nn
+# Post-attention modules
+# Average pool or sum
+# Aveage pool: take in N blocks, produce N embeddings, reduce to 1 block embedding, feed that into one MLP to get Q scalar.
+# Sum pool: take in N blocks, produce N embeddingss, feed into N MLPs, sum N MLPs to get Q scalar.
 from torch import nn as nn
 from torch.nn import Parameter, functional as F
 
@@ -5,7 +12,10 @@ from rlkit.torch import pytorch_util as ptu
 from rlkit.torch.core import PyTorchModule
 from rlkit.torch.networks import Mlp
 import torch
+from inspect import signature
+
 from rlkit.torch.relational.relational_util import fetch_preprocessing
+from rlkit.policies.base import Policy, ExplorationPolicy
 import rlkit.torch.pytorch_util as ptu
 import gtimer as gt
 
@@ -58,6 +68,11 @@ class Attention(PyTorchModule):
 
         self.activation_fnx = activation_fnx
 
+        # self.fc0 = nn.Linear(embedding_dim, num_heads * embedding_dim)
+        # # Project integration into logits
+        # self.fc1 = nn.Linear(embedding_dim, 1)
+        # self.softmax_temperature = Parameter(torch.tensor(softmax_temperature))
+
     def forward(self, query, context, memory, mask):
         """
         N, nV, nE memory -> N, nV, nE updated memory
@@ -93,7 +108,7 @@ class Attention(PyTorchModule):
         context = context.unsqueeze(1).unsqueeze(3).expand_as(query)
 
         # -> N, nQ, nV, nH, 1
-        qc_logits = self.fc_logit(torch.tanh(query + context))
+        qc_logits = self.fc_logit(torch.tanh(context + query))
 
         # if self.layer_norms is not None:
         #     qc_logits = self.layer_norms[1](qc_logits)
@@ -115,6 +130,7 @@ class Attention(PyTorchModule):
         # N, nQ, nV, nH, nE -> N, nQ, nH, nE
         attention_heads = (memory * attention_probs * memory_mask).sum(2).squeeze(2)
 
+        attention_heads = self.activation_fnx(attention_heads)
         # N, nQ, nH, nE -> N, nQ, nE
         # if nQ > 1:
         attention_result = self.fc_reduceheads(attention_heads.view(N, nQ, nH*nE))
@@ -124,8 +140,8 @@ class Attention(PyTorchModule):
         # attention_result = self.activation_fnx(attention_result)
         #TODO: add nonlinearity here...
 
-        if self.layer_norms is not None:
-            attention_result = self.layer_norms[2](attention_result)
+        # if self.layer_norms is not None:
+        #     attention_result = self.layer_norms[2](attention_result)
 
         # assert len(attention_result.size()) == 3
         return attention_result
@@ -136,10 +152,10 @@ class AttentiveGraphToGraph(PyTorchModule):
     Uses attention to perform message passing between 1-hop neighbors in a fully-connected graph
     """
     def __init__(self,
-                 object_total_dim,
                  embedding_dim=64,
                  num_heads=1,
-                 layer_norm=True):
+                 layer_norm=True,
+                 **kwargs):
         self.save_init_params(locals())
         super().__init__()
         self.fc_qcm = nn.Linear(embedding_dim, 3 * embedding_dim)
@@ -168,55 +184,6 @@ class AttentiveGraphToGraph(PyTorchModule):
         return self.attention(query, context, memory, mask)
 
 
-class ProjAttentiveGraphPooling(PyTorchModule):
-    """
-    Pools nV vertices to a single vertex embedding
-
-    """
-    def __init__(self,
-                 embedding_dim=64,
-                 num_heads=1,
-                 init_w=3e-3,
-                 layer_norm=True,
-                 proj_kwargs=None):
-        self.save_init_params(locals())
-        super().__init__()
-        self.fc_cm = nn.Linear(embedding_dim, 2 * embedding_dim)
-        self.layer_norm = nn.LayerNorm(2*embedding_dim) if layer_norm else None
-
-        self.input_independent_query = Parameter(torch.Tensor(embedding_dim))
-        self.input_independent_query.data.uniform_(-init_w, init_w)
-        self.num_heads = num_heads
-        self.attention = Attention(embedding_dim, num_heads=num_heads, layer_norm=layer_norm)
-        self.proj = Mlp(**proj_kwargs)
-
-    def forward(self, vertices, mask):
-        """
-        N, nV, nE -> N, nE
-        :param vertices:
-        :param mask:
-        :return:
-        """
-        N, nV, nE = vertices.size()
-
-        # nE -> N, nQ, nE where nQ == self.num_heads
-        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, self.num_heads, -1)
-
-        # if self.layer_norm is not None:
-        #     cm_block = self.layer_norm(self.fc_cm(vertices))
-        # else:
-        cm_block = self.fc_cm(vertices)
-        context, memory = cm_block.chunk(2, dim=-1)
-
-        gt.stamp("Readout_preattention")
-        attention_result = self.attention(query, context, memory, mask)
-
-        gt.stamp("Readout_postattention")
-        # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
-
-        return self.proj(attention_result).squeeze(1)
-
-
 class AttentiveGraphPooling(PyTorchModule):
     """
     Pools nV vertices to a single vertex embedding
@@ -226,7 +193,8 @@ class AttentiveGraphPooling(PyTorchModule):
                  embedding_dim=64,
                  num_heads=1,
                  init_w=3e-3,
-                 layer_norm=True):
+                 layer_norm=True,
+                 mlp_kwargs=None):
         self.save_init_params(locals())
         super().__init__()
         self.fc_cm = nn.Linear(embedding_dim, 2 * embedding_dim)
@@ -234,8 +202,13 @@ class AttentiveGraphPooling(PyTorchModule):
 
         self.input_independent_query = Parameter(torch.Tensor(embedding_dim))
         self.input_independent_query.data.uniform_(-init_w, init_w)
-        self.num_heads = num_heads
+        # self.num_heads = num_heads
         self.attention = Attention(embedding_dim, num_heads=num_heads, layer_norm=layer_norm)
+
+        if mlp_kwargs is not None:
+            self.proj = Mlp(**mlp_kwargs)
+        else:
+            self.proj = None
 
     def forward(self, vertices, mask):
         """
@@ -247,17 +220,22 @@ class AttentiveGraphPooling(PyTorchModule):
         N, nV, nE = vertices.size()
 
         # nE -> N, nQ, nE where nQ == self.num_heads
-        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, self.num_heads, -1)
+        query = self.input_independent_query.unsqueeze(0).unsqueeze(0).expand(N, 1, -1)
 
         # if self.layer_norm is not None:
         #     cm_block = self.layer_norm(self.fc_cm(vertices))
         # else:
         # cm_block = self.fc_cm(vertices)
         # context, memory = cm_block.chunk(2, dim=-1)
-        context, memory = vertices, vertices
+        context = vertices
+        memory = vertices
 
         gt.stamp("Readout_preattention")
         attention_result = self.attention(query, context, memory, mask)
 
         gt.stamp("Readout_postattention")
-        return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
+        # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
+        if self.proj is not None:
+            return self.proj(attention_result).squeeze(1)
+        else:
+            return attention_result

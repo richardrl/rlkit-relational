@@ -1,17 +1,31 @@
+"""
+This should results in an average return of ~3000 by the end of training.
+
+Usually hits 3000 around epoch 80-100. Within a see, the performance will be
+a bit noisy from one epoch to the next (occasionally dips dow to ~2000).
+
+Note that one epoch = 5k steps, so 200 epochs = 1 million steps.
+"""
+
 import gym
+
 from rlkit.data_management.obs_dict_replay_buffer import ObsDictRelabelingBuffer
 from rlkit.torch.her.her import HerTwinSAC
+
 from rlkit.torch.data_management.normalizer import CompositeNormalizer
 from rlkit.torch.optim.mpi_adam import MpiAdam
 from rlkit.launchers.launcher_util import run_experiment
 from rlkit.torch.relational.networks import *
+import torch.nn.functional as F
 from rlkit.torch.relational.modules import *
-from rlkit.torch.networks import Mlp
-from rlkit.launchers.config import get_ec2_settings
+from torch.nn import Parameter
 
 
 def experiment(variant):
-    import fetch_block_construction
+    try:
+        import fetch_block_construction
+    except ImportError as e:
+        print(e)
 
     env = gym.make(variant['env_id'])
     env.unwrapped.render_image_obs = False
@@ -19,9 +33,61 @@ def experiment(variant):
         env.env._max_episode_steps = variant['set_max_episode_steps']
 
     action_dim = env.action_space.low.size
-    robot_dim = 10
-    object_dim = 15
-    goal_dim = 3
+
+    value_graphprop_kwargs = dict(
+        graph_module_kwargs=dict(
+            # num_heads=num_query_heads,
+            # embedding_dim=embedding_dim,
+            embedding_dim=64,
+            num_heads=1,
+        ),
+        layer_norm=layer_norm,
+        num_query_heads=num_query_heads,
+        num_relational_blocks=num_relational_blocks,
+        activation_fnx=F.leaky_relu,
+        recurrent_graph=recurrent_graph
+    )
+
+    qvalue_graphprop_kwargs = dict(
+        graph_module_kwargs=dict(
+            num_heads=num_query_heads,
+            embedding_dim=embedding_dim,
+        ),
+        layer_norm=layer_norm,
+        num_query_heads=num_query_heads,
+        num_relational_blocks=num_relational_blocks,
+        activation_fnx=F.leaky_relu,
+        recurrent_graph=recurrent_graph
+    )
+
+    v_gp = GraphPropagation(**value_graphprop_kwargs)
+
+    q1_gp = GraphPropagation(**qvalue_graphprop_kwargs)
+
+    q2_gp = GraphPropagation(**qvalue_graphprop_kwargs)
+
+    policy_gp = GraphPropagation(**value_graphprop_kwargs)
+
+    policy_readout = AttentiveGraphPooling(mlp_kwargs=None)
+
+    qf1_readout = AttentiveGraphPooling(mlp_kwargs=dict(
+        hidden_sizes=mlp_hidden_sizes,
+        output_size=1,
+        input_size=variant['pooling_heads']*embedding_dim,
+        layer_norm=layer_norm,
+    ),)
+    qf2_readout = AttentiveGraphPooling(mlp_kwargs=dict(
+        hidden_sizes=mlp_hidden_sizes,
+        output_size=1,
+        input_size=variant['pooling_heads']*embedding_dim,
+        layer_norm=layer_norm,
+    ),)
+    vf_readout = AttentiveGraphPooling(mlp_kwargs=dict(
+        hidden_sizes=mlp_hidden_sizes,
+        output_size=1,
+        input_size=variant['pooling_heads']*embedding_dim,
+        layer_norm=layer_norm,
+    ),)
 
     shared_normalizer = CompositeNormalizer(object_dim + shared_dim + goal_dim,
                                             action_dim,
@@ -33,140 +99,40 @@ def experiment(variant):
                                                 goal_dim=goal_dim
                                             ))
 
-    object_total_dim = robot_dim + object_dim + goal_dim
-
-    policy = ReNNPolicy(
+    qf1 = QValueReNN(
+        graph_propagation=q1_gp,
+        readout=qf1_readout,
         input_module_kwargs=dict(
             normalizer=shared_normalizer,
-            object_total_dim=object_total_dim,
+            object_total_dim=object_dim+shared_dim+goal_dim+action_dim,
             embedding_dim=64,
             layer_norm=layer_norm
         ),
-        graph_module_kwargs=dict(
-            object_total_dim=object_total_dim,
-            embedding_dim=64,
-            layer_norm=layer_norm
-        ),
-        readout_module_kwargs=dict(
-            embedding_dim=64,
-            layer_norm=layer_norm,
-            num_heads=variant['pooling_heads'],
-            # proj_kwargs=dict(
-            #     hidden_sizes=mlp_hidden_sizes,
-            #     output_size=1,
-            #     input_size=embedding_dim,
-            #     layer_norm=layer_norm
-            # ),
-        ),
-        readout_module_class=AttentiveGraphPooling,
-        proj_kwargs=dict(
-            hidden_sizes=mlp_hidden_sizes,
-            obs_dim=embedding_dim,
-            action_dim=action_dim,
-            output_activation=torch.tanh,
-            layer_norm=layer_norm,
-        ),
-        num_graph_modules=num_graph_modules,
-        proj_class=FlattenTanhGaussianPolicy
+        composite_normalizer=shared_normalizer,
     )
 
-    qf1 = ReNN(
+    qf2 = QValueReNN(
+        graph_propagation=q2_gp,
+        readout=qf2_readout,
         input_module_kwargs=dict(
             normalizer=shared_normalizer,
-            object_total_dim=object_total_dim + action_dim,
+            object_total_dim=object_dim + shared_dim + goal_dim + action_dim,
             embedding_dim=64,
             layer_norm=layer_norm
         ),
-        graph_module_kwargs=dict(
-            object_total_dim=object_total_dim + action_dim,
-            embedding_dim=64,
-            layer_norm=layer_norm
-        ),
-        readout_module_kwargs=dict(
-            embedding_dim=64,
-            layer_norm=layer_norm,
-            num_heads=variant['pooling_heads'],
-            proj_kwargs=dict(
-                hidden_sizes=mlp_hidden_sizes,
-                output_size=1,
-                input_size=embedding_dim,
-                layer_norm=layer_norm
-            ),
-        ),
-        proj_class=Mlp,
-        proj_kwargs=dict(
-            hidden_sizes=mlp_hidden_sizes,
-            output_size=1,
-            input_size=embedding_dim,
-            layer_norm=layer_norm
-        ),
-        num_graph_modules=num_graph_modules
+        composite_normalizer=shared_normalizer,
     )
 
-    qf2 = ReNN(
+    vf = ValueReNN(
+        graph_propagation=v_gp,
+        readout=vf_readout,
         input_module_kwargs=dict(
             normalizer=shared_normalizer,
-            object_total_dim=object_total_dim + action_dim,
+            object_total_dim=object_dim + shared_dim + goal_dim,
             embedding_dim=64,
             layer_norm=layer_norm
         ),
-        graph_module_kwargs=dict(
-            object_total_dim=object_total_dim + action_dim,
-            embedding_dim=64,
-            layer_norm=layer_norm
-        ),
-        readout_module_kwargs=dict(
-            embedding_dim=64,
-            layer_norm=layer_norm,
-            num_heads=variant['pooling_heads'],
-            proj_kwargs=dict(
-                hidden_sizes=mlp_hidden_sizes,
-                output_size=1,
-                input_size=embedding_dim,
-                layer_norm=layer_norm
-            ),
-        ),
-        proj_class=Mlp,
-        proj_kwargs=dict(
-            hidden_sizes=mlp_hidden_sizes,
-            output_size=1,
-            input_size=embedding_dim,
-            layer_norm=layer_norm
-        ),
-        num_graph_modules=num_graph_modules
-    )
-
-    vf = ReNN(
-        input_module_kwargs=dict(
-            normalizer=shared_normalizer,
-            object_total_dim=object_total_dim,
-            embedding_dim=64,
-            layer_norm=layer_norm
-        ),
-        graph_module_kwargs=dict(
-            object_total_dim=object_total_dim,
-            embedding_dim=64,
-            layer_norm=layer_norm
-        ),
-        readout_module_kwargs=dict(
-            embedding_dim=64,
-            layer_norm=layer_norm,
-            num_heads=variant['pooling_heads'],
-            proj_kwargs=dict(
-                hidden_sizes=mlp_hidden_sizes,
-                output_size=1,
-                input_size=embedding_dim,
-                layer_norm=layer_norm
-            ),
-        ),
-        proj_class=Mlp,
-        proj_kwargs=dict(
-            hidden_sizes=mlp_hidden_sizes,
-            output_size=1,
-            input_size=embedding_dim,
-            layer_norm=layer_norm
-        ),
-        num_graph_modules=num_graph_modules
+        composite_normalizer=shared_normalizer,
     )
 
     observation_key = 'observation'
@@ -179,6 +145,30 @@ def experiment(variant):
         desired_goal_key=desired_goal_key,
         achieved_goal_key=achieved_goal_key,
         **variant['replay_buffer_kwargs']
+    )
+
+    policy = PolicyReNN(
+        graph_propagation=policy_gp,
+        readout=policy_readout,
+        out_size=action_dim,
+        input_module_kwargs=dict(
+            normalizer=shared_normalizer,
+            object_total_dim=object_dim + shared_dim + goal_dim,
+            embedding_dim=64,
+            layer_norm=layer_norm
+        ),
+        num_relational_blocks=num_relational_blocks,
+        num_query_heads=num_query_heads,
+        mlp_class=FlattenTanhGaussianPolicy, # KEEP IN MIND
+        mlp_kwargs=dict(
+            hidden_sizes=mlp_hidden_sizes,
+            obs_dim=variant['pooling_heads'] * embedding_dim,
+            action_dim=action_dim,
+            output_activation=torch.tanh,
+            layer_norm=layer_norm,
+            # init_w=3e-4,
+        ),
+        composite_normalizer=shared_normalizer
     )
 
     algorithm = HerTwinSAC(
@@ -204,7 +194,6 @@ def experiment(variant):
 
 if __name__ == "__main__":
     docker_img = "latest"
-    # docker_img = "negativereward_gpfg_uniformxy_rotctrl"
 
     if "rotctrl" in docker_img:
         action_dim = 8
@@ -216,13 +205,13 @@ if __name__ == "__main__":
         goal_dim = 3
 
     shared_dim = 10
-    num_graph_modules = 3
+    num_relational_blocks = 3
     num_query_heads = 1
 
     embedding_dim = 64
     layer_norm = True
     num_blocks = 1
-    stackonly = False
+
     num_epochs_per_eval = 10
 
     max_path_len = 50*num_blocks
@@ -230,13 +219,78 @@ if __name__ == "__main__":
     max_episode_steps = 50*num_blocks
 
     mlp_hidden_sizes=[64, 64, 64]
+    stackonly = False
 
-    module = __import__("rlkit.torch.relational.modules", fromlist=['modules'])
-
-    mode = "here_no_doodad"
+    mode = "ec2"
 
     instance_type = "c5.18xlarge"
-    settings_dict = get_ec2_settings(mode, instance_type)
+    if mode == "ec2":
+        if instance_type=="p2.xlarge":
+            num_gpus = 1
+            num_parallel_processes = 3
+            gpu_mode = "gpu_opt"
+        elif instance_type=="c4.2xlarge":
+            num_gpus = 0
+            num_parallel_processes = 7
+            gpu_mode = False
+        elif instance_type=="c4.4xlarge":
+            num_gpus = 0
+            num_parallel_processes = 15
+            gpu_mode = False
+        elif instance_type=="c5.4xlarge":
+            num_gpus = 0
+            num_parallel_processes = 15
+            gpu_mode = False
+        elif instance_type == "c5.9xlarge":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type == "c5.12xlarge":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type == "c5.18xlarge":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type == "c5.metal":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type == "c5d.18xlarge":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type=="c4.8xlarge":
+            num_gpus = 0
+            num_parallel_processes = 35
+            gpu_mode = False
+        elif instance_type=="p3.2xlarge":
+            num_gpus = 1
+            num_parallel_processes = 7
+            gpu_mode = "gpu_opt"
+        elif instance_type=="p2.16xlarge":
+            num_gpus = 1
+            num_parallel_processes = 5
+            gpu_mode = "gpu_opt"
+        elif instance_type=="g3.4xlarge":
+            num_parallel_processes = 14
+            num_gpus = 1
+            gpu_mode = "gpu_opt"
+        else:
+            raise NotImplementedError
+    elif mode == "local_docker":
+        instance_type = None
+        num_gpus = 0
+        gpu_mode = False
+        num_parallel_processes = 2
+    elif mode == "here_no_doodad":
+        instance_type = None
+        gpu_mode = False
+        num_gpus = 1
+        num_parallel_processes = 1
+
+    recurrent_graph=True
 
     variant = dict(
         algo_kwargs=dict(
@@ -245,15 +299,13 @@ if __name__ == "__main__":
             batch_size=256,
             discount=0.98,
             save_algorithm=True,
-            # collection_mode="online",
-            # num_updates_per_env_step=1,
-            collection_mode='batch',
+            collection_mode='batch', # TODO: set these settings from now on
             num_updates_per_epoch=50*num_blocks,
             num_steps_per_epoch=50*num_blocks, # Do one episode per block
             num_steps_per_eval=50*num_blocks * 10, # Do ten episodes per eval
             num_epochs_per_eval=10, # One episode per epoch, so this is roughly 10 episodes per eval * number of parallel episodes...
-            num_epochs_per_param_save=10 * 5,
-            num_gpus=settings_dict['num_gpus'],
+            num_epochs_per_param_save=10 * 5, # TODO: set these settings for hypersweeps
+            num_gpus=num_gpus,
             # min_num_steps_before_training=10000,
 
             #SAC args start
@@ -267,7 +319,7 @@ if __name__ == "__main__":
             max_size=int(1e5),
             fraction_goals_rollout_goals=0.2,  # equal to k = 4 in HER paper
             fraction_goals_env_goals=0.0,
-            num_relational=num_graph_modules,
+            num_relational=num_relational_blocks,
             num_heads=num_query_heads
         ),
         render=False,
@@ -276,17 +328,18 @@ if __name__ == "__main__":
         gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
         save_video_period=50,
-        num_relational_blocks=num_graph_modules,
+        num_relational_blocks=num_relational_blocks,
         set_max_episode_steps=max_episode_steps,
         mlp_hidden_sizes=mlp_hidden_sizes,
         num_query_heads=num_query_heads,
         action_dim=action_dim,
         goal_dim=goal_dim,
         embedding_dim=embedding_dim,
+        pooling_heads=1,
         her_kwargs=dict(
             exploration_masking=True
         ),
-        pooling_heads=1
+        recurrent_graph=recurrent_graph
     )
 
     test_prefix = "test" if mode == "here_no_doodad" else "pickandplace1"
@@ -294,15 +347,15 @@ if __name__ == "__main__":
 
     run_experiment(
         experiment,
-        exp_prefix=F"{test_prefix}_stack{num_blocks}_numgraphmodules{num_graph_modules}_nqh{num_query_heads}_dockimg{docker_img}_{stackonly}stackonly",  # Make sure no spaces..
+        exp_prefix=F"{test_prefix}_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_dockimg{docker_img}_{stackonly}stackonly_recurrent{recurrent_graph}",  # Make sure no spaces..
         region="us-west-2",
         mode=mode,
         variant=variant,
-        gpu_mode=settings_dict['gpu_mode'],
+        gpu_mode=gpu_mode,
         spot_price=10,
         snapshot_mode='gap_and_last',
         snapshot_gap=100,
         num_exps_per_instance=1,
         instance_type=instance_type,
-        python_cmd=F"mpirun --allow-run-as-root -np {settings_dict['num_parallel_processes']} python"
+        python_cmd=F"mpirun --allow-run-as-root -np {num_parallel_processes} python"
     )

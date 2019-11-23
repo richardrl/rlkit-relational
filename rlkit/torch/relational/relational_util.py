@@ -12,8 +12,7 @@ def fetch_preprocessing(obs,
                         zero_state_preprocessing_fnx=False,
                         lop_state_dim=3,
                         mask=None,
-                        return_combined_state=True,
-                        **kwargs):
+                        return_combined_state=True):
     """
     For Fetch robotics gym environment. Takes a flattened state and processes it into batched, normalized objects.
 
