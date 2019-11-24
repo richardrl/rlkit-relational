@@ -198,15 +198,13 @@ if __name__ == "__main__":
     test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer"
     print(f"\nTest prefix: {test_prefix}")
 
-    _ = input("\nPrev number of blocks: ")
-    if _:
-        new_stacklabel = _
-    else:
-        new_stacklabel = num_blocks if (prev_stackonly == "False" and stackonly) else num_blocks - 1
+    prev_block_num = input("\nPrev number of blocks: ")
+    if not prev_block_num:
+        prev_block_num = num_blocks if (prev_stackonly == "False" and stackonly) else num_blocks - 1
 
     run_experiment(
         experiment,
-        exp_prefix=F"{test_prefix}_stack{new_stacklabel}"
+        exp_prefix=F"{test_prefix}_stack{prev_block_num}"
         F"_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{nqh}_dockimg{docker_img}_probaction{prob_action}_stackonly{stackonly}",  # Make sure no spaces..
         region="us-west-2",
         mode=mode,
