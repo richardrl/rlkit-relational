@@ -22,12 +22,7 @@ import gym
 
 
 def experiment(variant):
-    import stacktracer
-    stacktracer.trace_start("trace.html")
-    try:
-        import fetch_block_construction
-    except ImportError as e:
-        print(e)
+    import fetch_block_construction
 
     env = gym.make(variant['env_id'])
     data = pickle.load(open(

@@ -23,10 +23,10 @@ File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/co
   <span style="color: #008000">self</span><span style="color: #666666">.</span>_try_to_train()
 File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/core/rl_algorithm.py&quot;</span>, line <span style="color: #666666">282</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _try_to_train
   <span style="color: #008000">self</span><span style="color: #666666">.</span>_do_training()
-File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/sac/twin_sac.py&quot;</span>, line <span style="color: #666666">340</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _do_training
-  policy_loss<span style="color: #666666">.</span>backward()
-File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/tensor.py&quot;</span>, line <span style="color: #666666">107</span>, <span style="color: #AA22FF; font-weight: bold">in</span> backward
-  torch<span style="color: #666666">.</span>autograd<span style="color: #666666">.</span>backward(<span style="color: #008000">self</span>, gradient, retain_graph, create_graph)
-File: <span style="color: #BA2121">&quot;/home/richard/rlkit_fresh/rlkit_venv/lib/python3.6/site-packages/torch/autograd/__init__.py&quot;</span>, line <span style="color: #666666">93</span>, <span style="color: #AA22FF; font-weight: bold">in</span> backward
-  allow_unreachable<span style="color: #666666">=</span><span style="color: #008000">True</span>)  <span style="color: #408080; font-style: italic"># allow_unreachable flag</span>
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/sac/twin_sac.py&quot;</span>, line <span style="color: #666666">281</span>, <span style="color: #AA22FF; font-weight: bold">in</span> _do_training
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>vf_optimizer<span style="color: #666666">.</span>step()
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/optim/mpi_adam.py&quot;</span>, line <span style="color: #666666">123</span>, <span style="color: #AA22FF; font-weight: bold">in</span> step
+  <span style="color: #008000">self</span><span style="color: #666666">.</span>set_params_from_flat((<span style="color: #008000">self</span><span style="color: #666666">.</span>get_flat_params() <span style="color: #666666">+</span> step_update)<span style="color: #666666">.</span>to(device<span style="color: #666666">=</span>torch<span style="color: #666666">.</span>device(<span style="color: #BA2121">&quot;cpu&quot;</span>)))
+File: <span style="color: #BA2121">&quot;/home/richard/rlkit-relational/rlkit/torch/optim/util.py&quot;</span>, line <span style="color: #666666">58</span>, <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #0000FF">__call__</span>
+  param<span style="color: #666666">.</span>data<span style="color: #666666">.</span>copy_(flattened_parameters[start:start<span style="color: #666666">+</span>size]<span style="color: #666666">.</span>view(shape))
 </pre></div>
