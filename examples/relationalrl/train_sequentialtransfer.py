@@ -107,13 +107,13 @@ if __name__ == "__main__":
     shared_dim = 10
 
     modes = ["ec2", "here_no_doodad", "local_docker"]
-    mode = modes[int(input(f"Mode: {modes}"))]
-    print(F"Mode selected {mode}. \n")
+    mode = modes[int(input(f"\nMode: {modes}\n"))]
+    print(F"Mode selected {mode}. ")
 
     docker_img = "latest"
-    print(F"\n Docker image selected: {docker_img}")
-    num_blocks = int(input("Num blocks: "))
-    print(f'\n{num_blocks} selected. \n')
+
+    num_blocks = int(input("\nNum blocks: "))
+    print(f'\n{num_blocks} selected.')
     num_epochs_per_eval = 10
 
     instance_type = "c5.18xlarge"
@@ -123,12 +123,12 @@ if __name__ == "__main__":
     gpu_mode = ec2_settings['gpu_mode']
 
     prob_action = .1
-    stackonly = bool(int(input("Stack only: \n")))
-    print(f'{stackonly} selected.\n')
+    stackonly = bool(int(input("\nStack only: ")))
+    print(f'\n{stackonly} selected.')
 
     filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/pickandplace1/11-23-pickandplace1-stack1-numrelblocks3-nqh1-dockimglatest-Falsestackonly-recurrentTrue/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue-1574500092573/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue_2019_11_23_09_14_11_0000--s-17380/itr_4800.pkl"
 
-    print(F"File name: {filename}\n")
+    print(F"\nFile name: {filename}")
 
     # assert "relational_preloadstack1" in filename
     import re
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     else:
         num_relational_blocks = 3
 
-    print(F"\n num_rel_blocks{num_relational_blocks}")
+    print(F"\nNum_rel_blocks: {num_relational_blocks}")
 
     if "stackonly" in filename:
         so = re.search("(?<=stackonly)(True|False)(_|-)", filename)
@@ -201,9 +201,9 @@ if __name__ == "__main__":
     )
 
     test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer"
-    print(f"Test prefix: {test_prefix}\n")
+    print(f"\nTest prefix: {test_prefix}")
 
-    _ = input("Prev stack label: \n")
+    _ = input("\nPrev number of blocks: ")
     if _:
         new_stacklabel = _
     else:
