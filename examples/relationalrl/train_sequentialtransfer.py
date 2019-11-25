@@ -121,7 +121,7 @@ if __name__ == "__main__":
     stackonly = bool(int(input("\nStack only: ")))
     print(f'\n{stackonly} selected.')
 
-    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack1/pickandplace1/11-23-pickandplace1-stack1-numrelblocks3-nqh1-dockimglatest-Falsestackonly-recurrentTrue/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue-1574500092573/11-23-pickandplace1_stack1_numrelblocks3_nqh1_dockimglatest_Falsestackonly_recurrentTrue_2019_11_23_09_14_11_0000--s-17380/itr_4800.pkl"
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack2/11-23-sequentialtransfer-recurrentFalse-stack1-stack2-numrelblocks3-nqh1-dockimglatest-probaction0.1-stackonlyFalse/11-23-sequentialtransfer_recurrentFalse_stack1_stack2_numrelblocks3_nqh1_dockimglatest_probaction0.1_stackonlyFalse-1574558023577/11-23-sequentialtransfer_recurrentFalse_stack1_stack2_numrelblocks3_nqh1_dockimglatest_probaction0.1_stackonlyFalse_2019_11_24_01_20_04_0000--s-36716/itr_2300.pkl"
 
     print(F"\nFile name: {filename}")
 
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         ),
     )
 
-    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer"
+    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer_recurrentFalse"
     print(f"\nTest prefix: {test_prefix}")
 
     prev_block_num = input("\nPrev number of blocks: ")

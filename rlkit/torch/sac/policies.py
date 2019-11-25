@@ -84,7 +84,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         :param deterministic: If True, do not sample
         :param return_log_prob: If True, return a sample and its log probability
         """
-        gt.stamp("Tanhnormal_forward")
+        # gt.stamp("Tanhnormal_forward")
         h = obs
         for i, fc in enumerate(self.fcs):
             h = self.hidden_activation(fc(h))
@@ -108,7 +108,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         else:
             tanh_normal = TanhNormal(mean, std)
 
-            gt.stamp("tanhnormal_pre")
+            # gt.stamp("tanhnormal_pre")
             if return_log_prob:
                 if reparameterize is True:
                     action, pre_tanh_value = tanh_normal.rsample(
@@ -128,7 +128,7 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
                     action = tanh_normal.rsample()
                 else:
                     action = tanh_normal.sample()
-            gt.stamp("tanhnormal_post")
+            # gt.stamp("tanhnormal_post")
 
         log_std = log_std.sum(dim=1, keepdim=True)
 

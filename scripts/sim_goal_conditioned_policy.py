@@ -7,6 +7,22 @@ from rlkit.torch import pytorch_util as ptu
 import numpy as np
 from gym.wrappers.monitor import Monitor
 
+
+def is_solved(path, num_blocks):
+    num_succeeded = 0
+    goal_threshold = .05
+    for block_id in range(num_blocks):
+        if np.linalg.norm(path['full_observations'][-1]['achieved_goal'][block_id * 3:(block_id + 1) * 3] - path['full_observations'][-1]['desired_goal'][block_id * 3:(block_id + 1) * 3]) < goal_threshold:
+            num_succeeded += 1
+    return num_succeeded == num_blocks
+
+
+def get_final_subgoaldist(env, path):
+    if isinstance(env, Monitor):
+        return sum(env.env.unwrapped.subgoal_distances(path['full_observations'][-1]['achieved_goal'], path['full_observations'][-1]['desired_goal']))
+    else:
+        return sum(env.unwrapped.subgoal_distances(path['full_observations'][-1]['achieved_goal'], path['full_observations'][-1]['desired_goal']))
+
 def simulate_policy(args):
     if args.pause:
         import ipdb; ipdb.set_trace()
@@ -15,7 +31,7 @@ def simulate_policy(args):
     env = data['env']
     env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
 
-    num_blocks = 1
+    num_blocks = 2
     print("Policy and environment loaded")
     if args.gpu:
         ptu.set_gpu_mode(True)
@@ -24,9 +40,10 @@ def simulate_policy(args):
         # some environments need to be reconfigured for visualization
         env.enable_render()
     policy.train(False)
-    paths = []
-    while True:
-        paths.append(multitask_rollout(
+    failures = []
+    successes = []
+    for path_idx in range(100):
+        path = multitask_rollout(
             env,
             policy,
             max_path_length=args.H,
@@ -37,13 +54,20 @@ def simulate_policy(args):
                 mask=np.ones((1, num_blocks)),
                 deterministic=True
             ),
-        ))
-        if hasattr(env, "log_diagnostics"):
-            env.log_diagnostics(paths)
-        if hasattr(env, "get_diagnostics"):
-            for k, v in env.get_diagnostics(paths).items():
-                logger.record_tabular(k, v)
-        logger.dump_tabular()
+        )
+
+        if not is_solved(path, num_blocks):
+            failures.append(path)
+            print(F"Failed {path_idx}")
+        else:
+            print(F"Succeeded {path_idx}")
+            successes.append(path_idx)
+        # if hasattr(env, "log_diagnostics"):
+        #     env.log_diagnostics(paths)
+        # if hasattr(env, "get_diagnostics"):
+        #     for k, v in env.get_diagnostics(paths).items():
+        #         logger.record_tabular(k, v)
+        # logger.dump_tabular()
 
 
 if __name__ == "__main__":

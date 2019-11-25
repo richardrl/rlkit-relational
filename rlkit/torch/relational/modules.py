@@ -218,10 +218,10 @@ class AttentiveGraphPooling(PyTorchModule):
         context = vertices
         memory = vertices
 
-        gt.stamp("Readout_preattention")
+        # gt.stamp("Readout_preattention")
         attention_result = self.attention(query, context, memory, mask)
 
-        gt.stamp("Readout_postattention")
+        # gt.stamp("Readout_postattention")
         # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
         if self.proj is not None:
             return self.proj(attention_result).squeeze(1)

@@ -206,7 +206,7 @@ if __name__ == "__main__":
         goal_dim = 3
 
     shared_dim = 10
-    num_relational_blocks = 3
+    num_relational_blocks = 1
     num_query_heads = 1
 
     embedding_dim = 64
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     num_parallel_processes = ec2_settings['num_parallel_processes']
     gpu_mode = ec2_settings['gpu_mode']
 
-    recurrent_graph=False
+    recurrent_graph=True
 
     variant = dict(
         algo_kwargs=dict(
