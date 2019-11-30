@@ -206,7 +206,7 @@ if __name__ == "__main__":
         goal_dim = 3
 
     shared_dim = 10
-    num_relational_blocks = 1
+    num_relational_blocks = 3
     num_query_heads = 1
 
     embedding_dim = 64
@@ -215,9 +215,11 @@ if __name__ == "__main__":
 
     num_epochs_per_eval = 10
 
-    max_path_len = 50*num_blocks
-
-    max_episode_steps = 50*num_blocks
+    max_path_len = 50
+    max_episode_steps = 50
+    # max_path_len = 50*num_blocks
+    #
+    # max_episode_steps = 50*num_blocks
 
     mlp_hidden_sizes=[64, 64, 64]
     stackonly = False
@@ -230,7 +232,7 @@ if __name__ == "__main__":
     num_parallel_processes = ec2_settings['num_parallel_processes']
     gpu_mode = ec2_settings['gpu_mode']
 
-    recurrent_graph=True
+    recurrent_graph=False
 
     variant = dict(
         algo_kwargs=dict(
@@ -282,7 +284,7 @@ if __name__ == "__main__":
         recurrent_graph=recurrent_graph
     )
 
-    test_prefix = "test" if mode == "here_no_doodad" else "pickandplace1"
+    test_prefix = "test" if mode == "here_no_doodad" else f"pickandplace1_seed1_recurrent{recurrent_graph}"
     print(f"\nprefix: {test_prefix}")
 
     run_experiment(

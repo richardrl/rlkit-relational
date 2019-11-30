@@ -17,16 +17,16 @@ class PyTorchModule(nn.Module, Serializable, metaclass=abc.ABCMeta):
         return self.state_dict()
 
     def set_param_values(self, param_values):
-        new_param_values = param_values.copy()
-        try:
-            self.load_state_dict(new_param_values)
-        except RuntimeError as e:
-            import re
-            e_str = re.search("(?<=state_dict: ).*(?=\.)", str(e)).group(0)
-            e_str.replace(" ", "")
-            x_stripped = [x.strip() for x in e_str.split(",")]
-            for x in x_stripped:
-                new_param_values[x] = nn.Parameter(torch.tensor(1.0))
+        # new_param_values = param_values.copy()
+        # try:
+        self.load_state_dict(param_values)
+        # except RuntimeError as e:
+        #     import re
+        #     e_str = re.search("(?<=state_dict: ).*(?=\.)", str(e)).group(0)
+        #     e_str.replace(" ", "")
+        #     x_stripped = [x.strip() for x in e_str.split(",")]
+        #     for x in x_stripped:
+        #         new_param_values[x] = nn.Parameter(torch.tensor(1.0))
 
     def get_param_values_np(self):
         state_dict = self.state_dict()

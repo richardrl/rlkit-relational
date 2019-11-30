@@ -121,7 +121,7 @@ if __name__ == "__main__":
     stackonly = bool(int(input("\nStack only: ")))
     print(f'\n{stackonly} selected.')
 
-    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack2/11-23-sequentialtransfer-recurrentFalse-stack1-stack2-numrelblocks3-nqh1-dockimglatest-probaction0.1-stackonlyFalse/11-23-sequentialtransfer_recurrentFalse_stack1_stack2_numrelblocks3_nqh1_dockimglatest_probaction0.1_stackonlyFalse-1574558023577/11-23-sequentialtransfer_recurrentFalse_stack1_stack2_numrelblocks3_nqh1_dockimglatest_probaction0.1_stackonlyFalse_2019_11_24_01_20_04_0000--s-36716/itr_2300.pkl"
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack3/numrelblocks1/seed0/11-28-sequentialtransfer-recurrentTrue-stack2-stack3-numrelblocks1-nqh1-dockimglatest-rewardIncremental-stackonlyTrue/11-28-sequentialtransfer_recurrentTrue_stack2_stack3_numrelblocks1_nqh1_dockimglatest_rewardIncremental_stackonlyTrue-1574943301243/11-28-sequentialtransfer_recurrentTrue_stack2_stack3_numrelblocks1_nqh1_dockimglatest_rewardIncremental_stackonlyTrue_2019_11_28_12_22_29_0000--s-71067/itr_600.pkl`"
 
     print(F"\nFile name: {filename}")
 
@@ -130,14 +130,25 @@ if __name__ == "__main__":
     if "nqh" in filename:
         nqh = int(re.search("(?<=nqh)(\d+)(?=_)", filename).group(0))
     else:
-        nqh = 1
+        nqh = int(input("\nNumber of query heads: "))
+    print(f"\nNqh: {nqh} selected.")
+
     if "numrelblocks" in filename:
         num_relational_blocks = int(re.search("(?<=numrelblocks)(\d+)", filename).group(0))
 
     else:
-        num_relational_blocks = 3
+        num_relational_blocks = int(input("\nNumber of relational blocks: "))
+    print(f"\nNum_relational_blocks: {num_relational_blocks} selected.")
 
-    print(F"\nNum_rel_blocks: {num_relational_blocks}")
+    if "recurrent" in filename:
+        recurrent = re.search("(?<=recurrent)(True|False)", filename).group(0)
+    else:
+        recurrent = input("\nRecurrent graph propagation?: ")
+
+    if "seed" in filename:
+        seed = re.search("(?<=seed)([0-9])", filename).group(0)
+    else:
+        seed = input("\nSeed?: ")
 
     if "stackonly" in filename:
         so = re.search("(?<=stackonly)(True|False)(_|-)", filename)
@@ -145,6 +156,8 @@ if __name__ == "__main__":
             so = re.search("(?<=[_,-])(True|False)stackonly", filename)
         prev_stackonly = so.group(1)
 
+    reward_types = ["Incremental", "Sparse"]
+    reward_type = reward_types[int(input(f"\nReward type: {reward_types}\n"))]
     variant = dict(
         algo_kwargs=dict(
             num_epochs=3000 * 10,
@@ -178,7 +191,7 @@ if __name__ == "__main__":
             num_heads=nqh
         ),
         render=False,
-        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly_SingletowerCase-v1",
+        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_{reward_type}Reward_DictstateObs_42Rendersize_{stackonly}Stackonly_SingletowerCase-v1",
         doodad_docker_image=F"richardrl/fbc:{docker_img}",
         gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
@@ -193,9 +206,11 @@ if __name__ == "__main__":
         her_kwargs=dict(
             exploration_masking=True
         ),
+        seed=seed,
+        recurrent=recurrent
     )
 
-    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else "sequentialtransfer_recurrentFalse"
+    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else f"seed{seed}_recurrent{recurrent}_sequentialtransfer"
     print(f"\nTest prefix: {test_prefix}")
 
     prev_block_num = input("\nPrev number of blocks: ")
@@ -205,7 +220,7 @@ if __name__ == "__main__":
     run_experiment(
         experiment,
         exp_prefix=F"{test_prefix}_stack{prev_block_num}"
-        F"_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{nqh}_dockimg{docker_img}_probaction{prob_action}_stackonly{stackonly}",  # Make sure no spaces..
+        F"_stack{num_blocks}_numrelblocks{num_relational_blocks}_nqh{nqh}_dockimg{docker_img}_reward{reward_type}_stackonly{stackonly}",  # Make sure no spaces..
         region="us-west-2",
         mode=mode,
         variant=variant,

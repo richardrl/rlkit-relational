@@ -6,6 +6,7 @@ from rlkit.samplers.rollout_functions import multitask_rollout
 from rlkit.torch import pytorch_util as ptu
 import numpy as np
 from gym.wrappers.monitor import Monitor
+import gym
 
 
 def is_solved(path, num_blocks):
@@ -23,15 +24,24 @@ def get_final_subgoaldist(env, path):
     else:
         return sum(env.unwrapped.subgoal_distances(path['full_observations'][-1]['achieved_goal'], path['full_observations'][-1]['desired_goal']))
 
+
 def simulate_policy(args):
+    import torch
+    # torch.manual_seed(6199)
     if args.pause:
         import ipdb; ipdb.set_trace()
     data = pickle.load(open(args.file, "rb"))
     policy = data['algorithm'].policy
-    env = data['env']
-    env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
 
-    num_blocks = 2
+    num_blocks = 9
+    stack_only = True
+
+
+    # env = data['env']
+    env = gym.make(F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stack_only}Stackonly_MultitowerCase-v1")
+
+    # env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
+
     print("Policy and environment loaded")
     if args.gpu:
         ptu.set_gpu_mode(True)
@@ -46,7 +56,7 @@ def simulate_policy(args):
         path = multitask_rollout(
             env,
             policy,
-            max_path_length=args.H,
+            max_path_length=num_blocks*50,
             animated=not args.hide,
             observation_key='observation',
             desired_goal_key='desired_goal',
@@ -61,14 +71,17 @@ def simulate_policy(args):
             print(F"Failed {path_idx}")
         else:
             print(F"Succeeded {path_idx}")
-            successes.append(path_idx)
+            successes.append(path)
         # if hasattr(env, "log_diagnostics"):
         #     env.log_diagnostics(paths)
         # if hasattr(env, "get_diagnostics"):
         #     for k, v in env.get_diagnostics(paths).items():
         #         logger.record_tabular(k, v)
         # logger.dump_tabular()
-
+    print(f"Success rate {len(successes)/(len(successes) + len(failures))}")
+    from rlkit.core.eval_util import get_generic_path_information
+    path_info = get_generic_path_information(successes + failures, num_blocks=num_blocks)
+    print(path_info)
 
 if __name__ == "__main__":
 
