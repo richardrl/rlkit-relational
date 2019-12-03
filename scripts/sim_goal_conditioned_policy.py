@@ -26,21 +26,21 @@ def get_final_subgoaldist(env, path):
 
 
 def simulate_policy(args):
-    import torch
+    # import torch
     # torch.manual_seed(6199)
     if args.pause:
         import ipdb; ipdb.set_trace()
     data = pickle.load(open(args.file, "rb"))
     policy = data['algorithm'].policy
 
-    num_blocks = 9
+    num_blocks = 6
     stack_only = True
 
 
     # env = data['env']
-    env = gym.make(F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stack_only}Stackonly_MultitowerCase-v1")
+    env = gym.make(F"FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stack_only}Stackonly_AllCase-v1")
 
-    # env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
+    env = Monitor(env, force=True, directory="videos/", video_callable=lambda x:x)
 
     print("Policy and environment loaded")
     if args.gpu:

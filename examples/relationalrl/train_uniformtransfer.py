@@ -19,6 +19,7 @@ from mpi4py import MPI
 from rlkit.launchers.config import get_infra_settings
 from rlkit.exploration_strategies.epsilon_greedy import EpsilonGreedy
 import gym
+from rlkit.envs.multi_env_wrapper import MultiEnvWrapperHerTwinSAC
 
 
 def experiment(variant):
@@ -52,7 +53,9 @@ def experiment(variant):
     exp_policy = PolicyWrappedWithExplorationStrategy(exploration_strategy=es,
                                                       policy=policy)
 
-    algorithm = HerTwinSAC(
+    algorithm = MultiEnvWrapperHerTwinSAC(
+        env_names=[variant['env_id_template'].format(num_blocks=i + 1, stackonly=stackonly(i)) for i in
+                   range(variant['replay_buffer_kwargs']['num_blocks'])],
         her_kwargs=dict(
             observation_key='observation',
             desired_goal_key='desired_goal',
@@ -121,7 +124,7 @@ if __name__ == "__main__":
     stackonly = bool(int(input("\nStack only: ")))
     print(f'\n{stackonly} selected.')
 
-    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack6/11-27-sequentialtransfer-recurrentFalse-stack5-stack6-numrelblocks3-nqh1-dockimglatest-rewardIncremental-stackonlyTrue/11-27-sequentialtransfer_recurrentFalse_stack5_stack6_numrelblocks3_nqh1_dockimglatest_rewardIncremental_stackonlyTrue-1574894953750/11-27-sequentialtransfer_recurrentFalse_stack5_stack6_numrelblocks3_nqh1_dockimglatest_rewardIncremental_stackonlyTrue_2019_11_27_22_56_32_0000--s-23990/itr_500.pkl"
+    filename = "/home/richard/rlkit-relational/examples/relationalrl/pkls/stack5/numrelblocks3/12-02-seed1-recurrentFalse-sequentialtransfer-stack4-stack5-numrelblocks3-nqh1-dockimglatest-rewardIncremental-stackonlyTrue/12-02-seed1_recurrentFalse_sequentialtransfer_stack4_stack5_numrelblocks3_nqh1_dockimglatest_rewardIncremental_stackonlyTrue-1575329832119/12-02-seed1_recurrentFalse_sequentialtransfer_stack4_stack5_numrelblocks3_nqh1_dockimglatest_rewardIncremental_stackonlyTrue_2019_12_02_23_45_52_0000--s-87775/itr_200.pkl"
 
     print(F"\nFile name: {filename}")
 
@@ -191,7 +194,7 @@ if __name__ == "__main__":
             num_heads=nqh
         ),
         render=False,
-        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_{reward_type}Reward_DictstateObs_42Rendersize_{stackonly}Stackonly_AllCase-v1",
+        env_id=F"FetchBlockConstruction_{num_blocks}Blocks_{reward_type}Reward_DictstateObs_42Rendersize_{stackonly}Stackonly_SingletowerCase-v1",
         doodad_docker_image=F"richardrl/fbc:{docker_img}",
         gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
@@ -210,7 +213,7 @@ if __name__ == "__main__":
         recurrent=recurrent
     )
 
-    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else f"seed{seed}_recurrent{recurrent}_sequentialtransfer_allCase"
+    test_prefix = "test_sequentialtransfer" if mode == "here_no_doodad" else f"seed{seed}_recurrent{recurrent}_sequentialtransfer"
     print(f"\nTest prefix: {test_prefix}")
 
     prev_block_num = input("\nPrev number of blocks: ")

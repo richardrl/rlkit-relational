@@ -9,6 +9,7 @@ We include additional features, beyond RLKit, aimed at supporting high step comp
 - Tuned example scripts for block construction task
 
 Implemented algorithms:
+![](docs/images/stack6_29.gif)
  - ReNN (*Towards Practical Robotic Manipulation using Relational Reinforcement Learning*)
     - [example script](examples/relationalrl/train_pickandplace1.py)
     - [ReNN paper](#)
