@@ -67,6 +67,7 @@ def multitask_rollout(
 
     if max_num_blocks is not None:
         lop_state = goal[-3:].copy()
+        assert (0 == lop_state).all()
         goal = goal[:-3].copy()
         goal = np.pad(goal,
                       ((0, int(max_num_blocks - cur_num_blocks) * key_sizes['goal'])),

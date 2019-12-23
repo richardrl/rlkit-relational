@@ -12,8 +12,7 @@ def fetch_preprocessing(obs,
                         zero_state_preprocessing_fnx=False,
                         lop_state_dim=3,
                         mask=None,
-                        return_combined_state=True,
-                        **kwargs):
+                        return_combined_state=True):
     """
     For Fetch robotics gym environment. Takes a flattened state and processes it into batched, normalized objects.
 
@@ -149,6 +148,7 @@ def invert_fetch_preprocessing(batched_shared,
 
 
 def get_masks(curr_num_blocks, max_num_blocks, path_len, keepdim=False):
+    assert curr_num_blocks <= max_num_blocks
     if path_len > 1:
         masks = np.ones((path_len, curr_num_blocks))  # Num_blocks is the MAX num_blocks
         masks = np.pad(masks, ((0, 0), (0, int(max_num_blocks - curr_num_blocks))), "constant",

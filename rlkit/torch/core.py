@@ -7,6 +7,8 @@ from torch.autograd import Variable
 
 from rlkit.torch import pytorch_util as ptu
 from rlkit.core.serializable import Serializable
+from functools import reduce
+import torch
 
 
 class PyTorchModule(nn.Module, Serializable, metaclass=abc.ABCMeta):
@@ -15,7 +17,16 @@ class PyTorchModule(nn.Module, Serializable, metaclass=abc.ABCMeta):
         return self.state_dict()
 
     def set_param_values(self, param_values):
+        # new_param_values = param_values.copy()
+        # try:
         self.load_state_dict(param_values)
+        # except RuntimeError as e:
+        #     import re
+        #     e_str = re.search("(?<=state_dict: ).*(?=\.)", str(e)).group(0)
+        #     e_str.replace(" ", "")
+        #     x_stripped = [x.strip() for x in e_str.split(",")]
+        #     for x in x_stripped:
+        #         new_param_values[x] = nn.Parameter(torch.tensor(1.0))
 
     def get_param_values_np(self):
         state_dict = self.state_dict()
@@ -85,7 +96,8 @@ class PyTorchModule(nn.Module, Serializable, metaclass=abc.ABCMeta):
         torch_kwargs = {k: torch_ify(v) for k, v in kwargs.items()}
         outputs = self.__call__(*torch_args, **torch_kwargs)
         if isinstance(outputs, tuple):
-            return tuple(np_ify(x) for x in outputs)
+            return tuple(np_ify(x) for x in outputs)            # return tuple(np_ify(x) for x in outputs)
+            return recursive_np_ify(outputs)
         else:
             return np_ify(outputs)
 
@@ -102,3 +114,26 @@ def np_ify(tensor_or_other):
         return ptu.get_numpy(tensor_or_other)
     else:
         return tensor_or_other
+
+
+def recursive_np_ify(object_holding_tensor):
+    if isinstance(object_holding_tensor, torch.Tensor):
+        return np_ify(object_holding_tensor)
+    elif isinstance(object_holding_tensor, dict):
+        return {k: np_ify(v) for k, v in object_holding_tensor.items()}
+    elif isinstance(object_holding_tensor, tuple):
+        return tuple([recursive_np_ify(el) for el in object_holding_tensor])
+
+
+def rgetattr(obj, attr, *args):
+    """See https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects"""
+    def _getattr(obj, attr):
+        if obj is None:
+            return None
+        return getattr(obj, attr, *args)
+    return reduce(_getattr, [obj] + attr.split('.'))
+
+
+def rsetattr(obj, attr, val):
+    pre, _, post = attr.rpartition('.')
+    return setattr(rgetattr(obj, pre) if pre else obj, post, val)

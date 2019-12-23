@@ -54,6 +54,7 @@ class Serializable(object):
         in_order_args = spec.args[1:]
         out = type(self)(**dict(zip(in_order_args, d["__args"]), **d["__kwargs"]))
         self.__dict__.update(out.__dict__)
+        self.__dict__.update()
 
     @classmethod
     def clone(cls, obj, **kwargs):

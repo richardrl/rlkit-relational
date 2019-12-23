@@ -6,7 +6,7 @@ from rlkit.launchers.launcher_util import run_experiment
 from rlkit.torch.relational.networks import *
 from rlkit.torch.relational.modules import *
 from rlkit.envs.multi_env_wrapper import MultiEnvWrapperHerTwinSAC
-from rlkit.launchers.config import get_ec2_settings
+from rlkit.launchers.config import get_infra_settings
 
 
 def stackonly(i):
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     mode = "here_no_doodad"
 
     instance_type = "c5.18xlarge"
-    settings_dict = get_ec2_settings(mode, instance_type=instance_type)
+    settings_dict = get_infra_settings(mode, instance_type=instance_type)
 
     variant = dict(
         algo_kwargs=dict(
@@ -237,8 +237,8 @@ if __name__ == "__main__":
         ),
         render=False,
         env_id_template="FetchBlockConstruction_{num_blocks}Blocks_IncrementalReward_DictstateObs_42Rendersize_{stackonly}Stackonly-v1",
-        doodad_docker_image=F"richardrl/rr:{docker_img}",
-        gpu_doodad_docker_image=F"richardrl/rr:{docker_img}",
+        doodad_docker_image=F"richardrl/fbc:{docker_img}",
+        gpu_doodad_docker_image=F"richardrl/fbc:{docker_img}",
         save_video=False,
         save_video_period=50,
         num_relational_blocks=num_graph_modules,
