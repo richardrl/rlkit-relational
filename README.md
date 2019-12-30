@@ -14,7 +14,7 @@ Implemented algorithms:
 
  - ReNN (*Towards Practical Robotic Manipulation using Relational Reinforcement Learning*)
     - [example script](examples/relationalrl/train_pickandplace1.py)
-    - [ReNN paper](#)
+    - [ReNN paper](https://arxiv.org/pdf/1912.11032.pdf)
     - [Documentation](docs/ReNN.md)
 
 To get started, checkout the example scripts, linked above.
