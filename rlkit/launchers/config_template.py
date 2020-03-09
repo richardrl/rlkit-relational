@@ -5,6 +5,20 @@ import os
 from os.path import join
 import rlkit
 
+def get_infra_settings(mode, instance_type):
+    """
+    Fill this out with settings for each EC2 instance type.
+    :param mode:
+    :param instance_type:
+    :return:
+    """
+    if mode == "ec2" and instance_type == "c5.18xlarge":
+        return dict(
+            num_gpus=0,
+            num_parallel_processes=16,
+            gpu_mode=False
+        )
+
 """
 `doodad.mount.MountLocal` by default ignores directories called "data"
 If you're going to rename this directory and use EC2, then change
@@ -123,6 +137,8 @@ SSS_PRE_CMDS = [
     'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/home/users/USERNAME'
     '/.mujoco/mjpro150/bin'
 ]
+
+
 
 """
 GCP Settings
