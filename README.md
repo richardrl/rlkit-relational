@@ -23,7 +23,7 @@ To get started, checkout the example scripts, linked above.
 
 Note: These settings have only been tested on Ubuntu 18. It is recommended to use Ubuntu 18. 
 
-1. Install and activate a new python3 virtualenv.
+1. Install and activate a new python3.6+ virtualenv. (3.6+ is only needed because f-strings are used liberally in the code.. you can change the f-strings to support lower versions of python).
 ```
 virtualenv -p python3 relationalrl_venv
 ```
