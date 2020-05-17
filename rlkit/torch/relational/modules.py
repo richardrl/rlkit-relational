@@ -11,6 +11,7 @@ import torch
 from rlkit.torch.relational.relational_util import fetch_preprocessing
 
 import gtimer as gt
+import rlkit.torch.pytorch_util as ptu
 
 
 class FetchInputPreprocessing(PyTorchModule):
@@ -61,7 +62,7 @@ class Attention(PyTorchModule):
 
         self.activation_fnx = activation_fnx
 
-    def forward(self, query, context, memory, mask):
+    def forward(self, query, context, memory, mask, reduce_heads=True, return_probs=False):
         """
         N, nV, nE memory -> N, nV, nE updated memory
 
@@ -107,6 +108,9 @@ class Attention(PyTorchModule):
         # qc_logits N, nQ, nV, nH, 1 -> N, nQ, nV, nH, 1
         attention_probs = F.softmax(qc_logits / self.softmax_temperature * logit_mask + (-99999) * (1 - logit_mask), dim=2)
 
+        if return_probs:
+            ret_attention_probs = attention_probs.squeeze(-1)
+
         # N, nV, nE -> N, nQ, nV, nH, nE
         memory = memory.unsqueeze(1).unsqueeze(3).expand(-1, nQ, -1, nH, -1)
 
@@ -117,6 +121,9 @@ class Attention(PyTorchModule):
 
         # N, nQ, nV, nH, nE -> N, nQ, nH, nE
         attention_heads = (memory * attention_probs * memory_mask).sum(2).squeeze(2)
+
+        if not reduce_heads:
+            return attention_heads
 
         attention_heads = self.activation_fnx(attention_heads)
         # N, nQ, nH, nE -> N, nQ, nE
@@ -132,7 +139,11 @@ class Attention(PyTorchModule):
         #     attention_result = self.layer_norms[2](attention_result)
 
         # assert len(attention_result.size()) == 3
-        return attention_result
+
+        if return_probs:
+            return [attention_result, ptu.get_numpy(ret_attention_probs)]
+        else:
+            return [attention_result]
 
 
 class AttentiveGraphToGraph(PyTorchModule):
@@ -150,7 +161,7 @@ class AttentiveGraphToGraph(PyTorchModule):
         self.attention = Attention(embedding_dim, num_heads=num_heads, layer_norm=layer_norm)
         self.layer_norm= nn.LayerNorm(3*embedding_dim) if layer_norm else None
 
-    def forward(self, vertices, mask):
+    def forward(self, vertices, mask, **kwargs):
         """
 
         :param vertices: N x nV x nE
@@ -158,7 +169,7 @@ class AttentiveGraphToGraph(PyTorchModule):
         """
         assert len(vertices.size()) == 3
         N, nV, nE = vertices.size()
-        assert mask.size() == torch.Size([N, nV])
+        assert mask.size() == torch.Size([N, nV]), (mask.size(), torch.Size([N, nV]))
 
         # -> (N, nQ, nE), (N, nV, nE), (N, nV, nE)
 
@@ -169,7 +180,7 @@ class AttentiveGraphToGraph(PyTorchModule):
 
         query, context, memory = qcm_block.chunk(3, dim=-1)
 
-        return self.attention(query, context, memory, mask)
+        return self.attention(query, context, memory, mask, **kwargs)
 
 
 class AttentiveGraphPooling(PyTorchModule):
@@ -198,7 +209,7 @@ class AttentiveGraphPooling(PyTorchModule):
         else:
             self.proj = None
 
-    def forward(self, vertices, mask):
+    def forward(self, vertices, mask, **kwargs):
         """
         N, nV, nE -> N, nE
         :param vertices:
@@ -219,11 +230,20 @@ class AttentiveGraphPooling(PyTorchModule):
         memory = vertices
 
         # gt.stamp("Readout_preattention")
-        attention_result = self.attention(query, context, memory, mask)
+
+        attention_out = self.attention(query, context, memory, mask, **kwargs)
+
+        attention_result = attention_out[0]
 
         # gt.stamp("Readout_postattention")
         # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
-        if self.proj is not None:
-            return self.proj(attention_result).squeeze(1)
-        else:
-            return attention_result
+        # if self.proj is not None:
+
+        # ret_out = [self.proj(attention_result).squeeze(1)]
+        ret_out = [attention_result.squeeze(1)]
+
+        if kwargs['return_probs']:
+            ret_out.append(attention_out[1])
+        return ret_out
+        # else:
+        #     return attention_result

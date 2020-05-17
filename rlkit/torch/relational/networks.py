@@ -14,6 +14,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from rlkit.torch.pytorch_util import shuffle_and_mask
 from rlkit.torch.networks import Mlp
 from rlkit.torch.relational.modules import *
+import rlkit.torch.pytorch_util as ptu
 
 
 class GraphPropagation(PyTorchModule):
@@ -72,7 +73,7 @@ class GraphPropagation(PyTorchModule):
         self.layer_norm = layer_norm
         self.activation_fnx = activation_fnx
 
-    def forward(self, vertices, mask=None, *kwargs):
+    def forward(self, vertices, mask=None, **kwargs):
         """
 
         :param shared_state: state that should be broadcasted along nB dimension. N * (nR + nB * nF)
@@ -82,14 +83,35 @@ class GraphPropagation(PyTorchModule):
         output = vertices
 
         for i in range(self.num_relational_blocks):
-            new_output = self.graph_module_list[i](output, mask)
-            new_output = output + new_output
+            graph_module_output = self.graph_module_list[i](output, mask, **kwargs)
 
-            output = self.activation_fnx(new_output) # Diff from 7/22
+            new_graph = graph_module_output[0]
+
+            if "return_probs" in kwargs.keys() and kwargs["return_probs"]:
+                # Get probs as np array
+                probs = graph_module_output[1]
+                if i == 0:
+                    N, nQ, nH, nB = probs.shape
+                    stacked_probs = probs.reshape(N, nQ * nH, nB)
+                else:
+                    # stacked_probs -> N * num_relational_blocks * nQ * nH * nB
+                    N, nQ, nH, nB = probs.shape
+                    stacked_probs = np.concatenate((stacked_probs, probs.reshape(N, nQ * nH, nB)),
+                                                axis=1)
+
+
+            new_graph = output + new_graph
+
+            new_graph = self.activation_fnx(new_graph) # Diff from 7/22
             # Apply layer normalization
             if self.layer_norm:
-                output = self.layer_norms[i](output)
-        return output
+                new_graph = self.layer_norms[i](new_graph)
+
+        outlist = [new_graph]
+
+        if "return_probs" in kwargs.keys() and kwargs["return_probs"]:
+           outlist.append(stacked_probs)
+        return outlist
 
 
 class ValueReNN(PyTorchModule):
@@ -154,6 +176,8 @@ class QValueReNN(PyTorchModule):
 class PolicyReNN(PyTorchModule, ExplorationPolicy):
     """
     Used for policy network
+
+    The function output is typically np_ified in eval_np
     """
 
     def __init__(self,
@@ -181,17 +205,38 @@ class PolicyReNN(PyTorchModule, ExplorationPolicy):
                 obs,
                 mask=None,
                 demo_normalizer=False,
+                return_probs=False,
                 **mlp_kwargs):
         assert mask is not None
         vertices = self.input_module(obs, mask=mask)
-        response_embeddings = self.graph_propagation.forward(vertices, mask=mask)
+        graphpropagation_output = self.graph_propagation.forward(vertices, mask=mask, return_probs=return_probs)
 
-        selected_objects = self.selection_attention(
+        response_embeddings = graphpropagation_output[0]
+        assert len(response_embeddings.shape) == 3
+
+        # import pdb
+        # pdb.set_trace()
+        selection_out = self.selection_attention(
             vertices=response_embeddings,
-            mask=mask
+            mask=mask,
+            return_probs=return_probs
         )
+
+        selected_objects = selection_out[0]
         selected_objects = selected_objects.squeeze(1)
-        return self.mlp(selected_objects, **mlp_kwargs)
+
+        if return_probs:
+            selection_probs = selection_out[1]
+            N, nQ, nH, nB = selection_probs.shape
+
+            # Concatenate the graph propagation probabilities with the selection probabilities
+            stacked_probs = np.concatenate((graphpropagation_output[1],
+                                            selection_probs.reshape(N, nQ * nH, nB)),
+                                           axis=1)
+            return [self.mlp(selected_objects, **mlp_kwargs),
+                    stacked_probs]
+        else:
+            return [self.mlp(selected_objects, **mlp_kwargs)]
 
     def get_action(self,
                    obs_np,
@@ -204,9 +249,16 @@ class PolicyReNN(PyTorchModule, ExplorationPolicy):
     def get_actions(self,
                     obs_np,
                     **kwargs):
-        mlp_outputs = self.eval_np(obs_np, **kwargs)
+
+        policy_outputs = self.eval_np(obs_np, **kwargs)
+
+        mlp_outputs = policy_outputs[0]
+
         assert len(mlp_outputs) == 8
         actions = mlp_outputs[0]
 
         agent_info = dict()
+
+        if "return_probs" in kwargs and kwargs['return_probs']:
+            agent_info["attn_probs"] = policy_outputs[1]
         return actions, agent_info

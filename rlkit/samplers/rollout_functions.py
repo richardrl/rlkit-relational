@@ -86,6 +86,7 @@ def multitask_rollout(
 
         obs_goal = np.hstack((o, goal))
 
+
         a, agent_info = agent.get_action(obs_goal, **get_action_kwargs)
 
         next_o_dic, r, d, env_info = env.step(a)

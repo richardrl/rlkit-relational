@@ -11,6 +11,8 @@ filename = str(uuid.uuid4())
 
 def simulate_policy(args):
     data = joblib.load(args.file)
+    import pdb
+    pdb.set_trace()
     policy = data['policy']
     env = data['env']
     print("Policy loaded")

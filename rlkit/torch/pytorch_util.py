@@ -293,6 +293,20 @@ class GradientChangeChecker:
         # return not unchanged_params
         return len(unchanged_params) == len(list(self.before_params))
 
+    def any_param_unchanged(self, network):
+        assert self.before_params, "No params cloned before gradient update loop"
+        unchanged_params = []
+        for (_, p0), (name, p1) in zip(self.before_params, network.named_parameters()):
+            # if p0.grad is not None and p1.grad is not None:
+            # print(F"Yes grad: {name}")
+            if torch.equal(p0, p1):
+                unchanged_params.append(name)
+            else:
+                # print(F"No grad: {name}")
+                pass
+        # assert not unchanged_params, unchanged_params
+        # return not unchanged_params
+        return len(unchanged_params) > 0
 
 gcc = GradientChangeChecker()
 

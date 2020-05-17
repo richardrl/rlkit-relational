@@ -95,8 +95,9 @@ class PyTorchModule(nn.Module, Serializable, metaclass=abc.ABCMeta):
         torch_args = tuple(torch_ify(x) for x in args)
         torch_kwargs = {k: torch_ify(v) for k, v in kwargs.items()}
         outputs = self.__call__(*torch_args, **torch_kwargs)
-        if isinstance(outputs, tuple):
-            return tuple(np_ify(x) for x in outputs)            # return tuple(np_ify(x) for x in outputs)
+
+        if isinstance(outputs, tuple) or isinstance(outputs, list):
+            # return tuple(np_ify(x) for x in outputs)            # return tuple(np_ify(x) for x in outputs)
             return recursive_np_ify(outputs)
         else:
             return np_ify(outputs)
@@ -121,9 +122,10 @@ def recursive_np_ify(object_holding_tensor):
         return np_ify(object_holding_tensor)
     elif isinstance(object_holding_tensor, dict):
         return {k: np_ify(v) for k, v in object_holding_tensor.items()}
-    elif isinstance(object_holding_tensor, tuple):
+    elif isinstance(object_holding_tensor, tuple) or isinstance(object_holding_tensor, list):
         return tuple([recursive_np_ify(el) for el in object_holding_tensor])
-
+    elif isinstance(object_holding_tensor, np.ndarray):
+        return object_holding_tensor
 
 def rgetattr(obj, attr, *args):
     """See https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects"""
