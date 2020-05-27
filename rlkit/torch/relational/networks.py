@@ -80,10 +80,10 @@ class GraphPropagation(PyTorchModule):
         :param object_and_goal_state: individual objects
         :return:
         """
-        output = vertices
+        graph = vertices
 
         for i in range(self.num_relational_blocks):
-            graph_module_output = self.graph_module_list[i](output, mask, **kwargs)
+            graph_module_output = self.graph_module_list[i](graph, mask, **kwargs)
 
             new_graph = graph_module_output[0]
 
@@ -100,14 +100,14 @@ class GraphPropagation(PyTorchModule):
                                                 axis=1)
 
 
-            new_graph = output + new_graph
+            new_graph = graph + new_graph
 
-            new_graph = self.activation_fnx(new_graph) # Diff from 7/22
+            graph = self.activation_fnx(new_graph) # Diff from 7/22
             # Apply layer normalization
             if self.layer_norm:
-                new_graph = self.layer_norms[i](new_graph)
+                graph = self.layer_norms[i](graph)
 
-        outlist = [new_graph]
+        outlist = [graph]
 
         if "return_probs" in kwargs.keys() and kwargs["return_probs"]:
            outlist.append(stacked_probs)

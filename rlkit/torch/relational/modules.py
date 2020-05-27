@@ -123,7 +123,7 @@ class Attention(PyTorchModule):
         attention_heads = (memory * attention_probs * memory_mask).sum(2).squeeze(2)
 
         if not reduce_heads:
-            return attention_heads
+            return [attention_heads]
 
         attention_heads = self.activation_fnx(attention_heads)
         # N, nQ, nH, nE -> N, nQ, nE
@@ -214,7 +214,7 @@ class AttentiveGraphPooling(PyTorchModule):
         N, nV, nE -> N, nE
         :param vertices:
         :param mask:
-        :return:
+        :return: list[attention_result]
         """
         N, nV, nE = vertices.size()
 
@@ -234,6 +234,9 @@ class AttentiveGraphPooling(PyTorchModule):
         attention_out = self.attention(query, context, memory, mask, **kwargs)
 
         attention_result = attention_out[0]
+        if 'reduce_heads' in kwargs and not kwargs['reduce_heads']:
+            assert len(attention_result.shape) == 4
+            return [attention_result]
 
         # gt.stamp("Readout_postattention")
         # return attention_result.sum(dim=1) # Squeeze nV dimension so that subsequent projection function does not have a useless 1 dimension
@@ -242,7 +245,7 @@ class AttentiveGraphPooling(PyTorchModule):
         # ret_out = [self.proj(attention_result).squeeze(1)]
         ret_out = [attention_result.squeeze(1)]
 
-        if kwargs['return_probs']:
+        if 'return_probs' in kwargs and kwargs['return_probs']:
             ret_out.append(attention_out[1])
         return ret_out
         # else:

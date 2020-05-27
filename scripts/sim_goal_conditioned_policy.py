@@ -38,7 +38,7 @@ def simulate_policy(args):
     data = pickle.load(open(args.file, "rb"))
     policy = data['algorithm'].policy
 
-    num_blocks = 3
+    num_blocks = 2
     stack_only = True
 
 
@@ -114,7 +114,7 @@ def simulate_policy(args):
 
     failures = []
     successes = []
-    for path_idx in range(1):
+    for path_idx in range(20):
         path = multitask_rollout(
             env,
             policy,
