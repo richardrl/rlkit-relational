@@ -19,6 +19,16 @@ Implemented algorithms:
 
 To get started, checkout the example scripts, linked above.
 
+If you find this code useful, please cite:
+
+ @inproceedings{li19relationalrl,
+   Author = {Li, Richard and
+   Jabri, Allan and Darrell, Trevor and Agrawal, Pulkit},
+   Title = {Towards Practical Multi-object Manipulation using Relational Reinforcement Learning},
+   Booktitle = {ICRA},
+   Year = {2020}
+ }
+
 ## Installation
 
 Note: These settings have only been tested on Ubuntu 18. It is recommended to use Ubuntu 18. 
