@@ -76,7 +76,7 @@ pyzmq==18.0.1
 ray==0.6.2
 redis==3.1.0
 requests==2.21.0
-rsa==3.4.2
+rsa==4.1
 s3transfer==0.1.13
 scikit-video==1.1.11
 scipy==1.2.0
