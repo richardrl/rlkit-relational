@@ -71,7 +71,7 @@ pytest==4.2.0
 python-dateutil==2.7.5
 python-utils==2.3.0
 pytz==2018.9
-PyYAML==3.13
+PyYAML==5.4
 pyzmq==18.0.1
 ray==0.6.2
 redis==3.1.0
