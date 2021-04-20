@@ -59,7 +59,7 @@ pluggy==0.8.1
 prompt-toolkit==2.0.9
 psutil==5.5.0
 ptyprocess==0.6.0
-py==1.7.0
+py==1.10.0
 pyasn1==0.4.5
 pycparser==2.19
 pygame==1.9.4
