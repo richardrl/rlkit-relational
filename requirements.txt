@@ -48,7 +48,7 @@ mpi4py==3.0.1
 mujoco-py==1.50.1.68
 numpy==1.16.0
 numpy-stl==2.10.0
-opencv-python==4.0.0.21
+opencv-python==4.2.0.32
 pandas==0.24.1
 parso==0.4.0
 pexpect==4.7.0
