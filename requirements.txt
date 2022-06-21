@@ -46,7 +46,7 @@ matplotlib==3.0.2
 more-itertools==5.0.0
 mpi4py==3.0.1
 mujoco-py==1.50.1.68
-numpy==1.16.0
+numpy==1.22.0
 numpy-stl==2.10.0
 opencv-python==4.0.0.21
 pandas==0.24.1
